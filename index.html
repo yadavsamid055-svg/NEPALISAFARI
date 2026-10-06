@@ -1,0 +1,1428 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf6ef">
+  <title>NepaliSafari - Explore Nepal together</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24343a;
+      --muted: #718087;
+      --line: #e9e3da;
+      --paper: #fffefa;
+      --canvas: #fbf6ef;
+      --green: #176b70;
+      --green-deep: #10494f;
+      --mint: #d8f0e8;
+      --lime: #f4be54;
+      --coral: #df6757;
+      --blue: #648bc2;
+      --shadow: 0 14px 36px rgba(37, 69, 68, .10);
+      font-family: "DM Sans", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    html[lang="ne"] body, html[lang="ne"] button, html[lang="ne"] input, html[lang="ne"] select { font-family: "Noto Sans Devanagari", "DM Sans", sans-serif; }
+    html[lang="ne"] .brand-name, html[lang="ne"] .welcome h2, html[lang="ne"] .page-head h1, html[lang="ne"] .list-heading strong { font-family: "Noto Sans Devanagari", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(ellipse at 87% 8%, rgba(184,226,214,.42), transparent 29rem), radial-gradient(ellipse at 8% 44%, rgba(244,190,84,.12), transparent 25rem), var(--canvas); color: var(--ink); min-width: 320px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .culture-backdrop { position: fixed; z-index: 0; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .shell { min-height: 100vh; position: relative; z-index: 1; }
+    .topbar { height: 72px; background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 34px; position: sticky; z-index: 20; top: 0; backdrop-filter: blur(12px); }
+    .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; }
+    .brand-mark { width: 46px; height: 38px; display: grid; place-items: center; border: 1px solid #f0ddd7; border-radius: 12px; background: linear-gradient(145deg,#fff8f2,#fff); box-shadow: 0 3px 9px rgba(159,48,45,.1); }
+    .brand-mark svg { width: 42px; height: 34px; }
+    .brand-name { font: 700 19px/1 "Space Grotesk", sans-serif; letter-spacing: -.7px; }
+    .brand-name span { color: var(--coral); }
+    .brand-tag { color: var(--muted); font-size: 11px; margin-left: 7px; padding-left: 11px; border-left: 1px solid var(--line); }
+    .top-actions { display: flex; align-items: center; gap: 13px; }
+    .language-button { height: 34px; border: 1px solid var(--line); background: white; color: var(--green-deep); border-radius: 8px; padding: 0 10px; font-weight: 700; font-size: 11px; }
+    .language-button:hover { background: #e7f3ef; }
+    .secure-note { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 7px; }
+    .secure-note svg { color: var(--green); }
+    .role-button { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 7px 10px 7px 7px; border-radius: 9px; display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; }
+    .account-copy { display: grid; text-align: left; gap: 2px; }
+    .account-copy small { color: var(--muted); font-size: 9px; font-weight: 500; }
+    .avatar { width: 30px; height: 30px; background: var(--mint); color: var(--green-deep); display: grid; place-items: center; border-radius: 8px; font-weight: 700; font-size: 12px; }
+    .avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+    .caret { color: var(--muted); font-size: 10px; margin-left: 2px; }
+    .layout { max-width: 1480px; padding: 24px 30px 48px; margin: auto; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 26px; }
+    .sidebar { position: sticky; top: 96px; height: max-content; }
+    .welcome { padding: 6px 10px 21px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .welcome h2 { font: 600 20px/1.25 "Space Grotesk", sans-serif; margin: 8px 0 5px; }
+    .welcome p { color: var(--muted); font-size: 12px; margin: 0; }
+    .nav-label { color: #a0aaa4; text-transform: uppercase; font-size: 10px; letter-spacing: 1.2px; font-weight: 700; padding: 10px 10px 8px; }
+    .nav-list { display: grid; gap: 4px; }
+    .nav-item { border: 0; text-align: left; color: #66736d; background: transparent; padding: 11px 12px; border-radius: 8px; display: flex; align-items: center; gap: 11px; font-size: 13px; font-weight: 600; width: 100%; }
+    .nav-item svg { width: 17px; height: 17px; }
+    .nav-item:hover { background: #edf4ef; }
+    .nav-item.active { background: #dff0eb; color: var(--green-deep); box-shadow: inset 3px 0 var(--lime); }
+    .side-divider { border-top: 1px solid var(--line); margin: 20px 10px 13px; }
+    .trust-note { margin: 27px 3px 0; padding: 14px; background: linear-gradient(135deg,#e5f3ee,#fbf1dc); border: 1px solid #e5e8d9; border-radius: 10px; }
+    .trust-note strong { font-size: 12px; display: block; margin: 0 0 5px; }
+    .trust-note p { color: #687a78; font-size: 11px; line-height: 1.55; margin: 0; }
+    main { min-width: 0; }
+    .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin: 5px 0 19px; }
+    .page-head h1 { font: 600 30px/1.15 "Space Grotesk", sans-serif; margin: 6px 0 5px; letter-spacing: 0; }
+    .page-head p { margin: 0; color: var(--muted); font-size: 13px; }
+    .journey-banner { min-height: 142px; margin: 0 0 15px; padding: 17px 20px; overflow: hidden; position: relative; isolation: isolate; border: 1px solid #ead9d4; border-radius: 12px; background: linear-gradient(112deg, #fff8ef 0%, #f9e8df 42%, #e5f2df 74%, #d8eafa 100%); box-shadow: 0 9px 26px rgba(88,48,53,.09); animation: bannerArrive .7s ease-out both; }
+    .journey-banner::after { content: ""; position: absolute; z-index: 1; inset: auto 0 0; height: 4px; background: linear-gradient(90deg,#17499a 0 25%,#dc143c 25% 50%,#f2ad37 50% 75%,#398353 75%); opacity: .9; }
+    .journey-copy { position: relative; z-index: 2; pointer-events: none; }
+    .journey-copy .eyebrow { color: #a44945; }
+    .journey-copy strong { display: block; margin-top: 5px; font: 600 19px/1.15 "Space Grotesk", sans-serif; color: #3f334b; }
+    .journey-copy p { margin: 4px 0 0; color: #665e6b; font-size: 11px; }
+    .journey-scenery { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
+    .journey-route { fill: none; stroke: #d77836; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 1100; stroke-dashoffset: 1100; animation: traceJourney 4.1s .3s ease-out forwards; }
+    .journey-route-glow { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; opacity: .72; }
+    .journey-pin { position: absolute; z-index: 2; top: 68%; transform: translate(-50%,-50%); display: grid; justify-items: center; gap: 3px; color: var(--green-deep); font-size: 9px; font-weight: 700; letter-spacing: .4px; }
+    .journey-pin::before { content: ""; width: 9px; height: 9px; border: 2px solid white; border-radius: 50%; background: #dc143c; box-shadow: 0 0 0 3px rgba(220,20,60,.17); }
+    .journey-pin--start { left: 6%; }
+    .journey-pin--end { left: 94%; }
+    .journey-car { position: absolute; z-index: 3; top: 59%; left: 5%; width: 39px; height: 28px; color: var(--green); filter: drop-shadow(0 3px 2px rgba(28,55,42,.22)); animation: driveAcross 4.3s cubic-bezier(.45,.04,.36,1) .35s both; }
+    .journey-car svg { width: 100%; height: 100%; overflow: visible; }
+    @keyframes bannerArrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes traceJourney { to { stroke-dashoffset: 0; } }
+    @keyframes driveAcross {
+      0% { left: 5%; top: 59%; transform: rotate(-3deg); }
+      24% { top: 41%; transform: rotate(2deg); }
+      48% { top: 65%; transform: rotate(-2deg); }
+      72% { top: 53%; transform: rotate(2deg); }
+      100% { left: calc(94% - 39px); top: 39%; transform: rotate(0); }
+    }
+    .primary { border: 0; background: linear-gradient(135deg,var(--green),#23828a); color: #fff; padding: 11px 15px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 5px 12px rgba(23,107,112,.2); }
+    .primary:hover { background: linear-gradient(135deg,var(--green-deep),var(--green)); }
+    .secondary { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 10px 13px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .quiet-button { border: 0; background: transparent; color: var(--green); font-size: 12px; font-weight: 700; padding: 7px; }
+    .search-panel { background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 15px; display: grid; grid-template-columns: minmax(130px,1fr) 32px minmax(130px,1fr) minmax(115px,.7fr) auto; gap: 10px; align-items: end; box-shadow: 0 4px 16px rgba(31,56,47,.025); }
+    .field label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); margin: 0 0 6px 1px; }
+    .field input, .field select { width: 100%; min-width: 0; border: 1px solid var(--line); background: #fff; height: 39px; border-radius: 7px; padding: 0 10px; color: var(--ink); outline: none; font-size: 12px; }
+    .field input[readonly] { background: #edf5f1; color: var(--green-deep); font-weight: 700; }
+    .field small { display: block; margin: 5px 1px 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .field input:focus, .field select:focus { border-color: #58a1a0; box-shadow: 0 0 0 3px rgba(23,107,112,.13); }
+    .swap { border: 1px solid var(--line); color: var(--green); background: white; height: 35px; width: 32px; border-radius: 7px; margin-bottom: 2px; font-weight: 700; }
+    .search-button { height: 39px; min-width: 91px; }
+    .content-grid { display: grid; grid-template-columns: minmax(0,1.13fr) minmax(340px,.87fr); gap: 15px; margin-top: 15px; align-items: start; }
+    .map-panel { height: 540px; background: #e7f0ed; border: 1px solid #d6e6df; border-radius: 10px; overflow: hidden; position: relative; }
+    #map { position: absolute; inset: 0; z-index: 1; background-color: transparent; }
+    .map-fallback { position: absolute; inset: 0; overflow: hidden; background-color: #e7f0ed; background-image: linear-gradient(35deg, transparent 46%, rgba(255,255,255,.88) 47%, rgba(255,255,255,.88) 49%, transparent 50%), linear-gradient(118deg, transparent 42%, rgba(255,255,255,.92) 43%, rgba(255,255,255,.92) 45%, transparent 46%), linear-gradient(8deg, transparent 71%, rgba(255,255,255,.8) 72%, rgba(255,255,255,.8) 73%, transparent 74%), repeating-linear-gradient(90deg, transparent 0 68px, rgba(188,210,200,.4) 69px 70px), repeating-linear-gradient(0deg, transparent 0 62px, rgba(188,210,200,.36) 63px 64px); }
+    .map-fallback::before { content: ""; position: absolute; width: 175%; height: 35%; top: 32%; left: -35%; border: 24px solid rgba(168,204,188,.38); border-left: 0; border-right: 0; border-radius: 50%; transform: rotate(-22deg); }
+    .map-fallback::after { content: ""; position: absolute; width: 19px; height: 19px; left: 54%; top: 45%; border: 5px solid white; border-radius: 50%; background: var(--coral); box-shadow: 0 2px 9px #667; }
+    .map-legend { position: absolute; left: 14px; top: 14px; z-index: 5; background: rgba(255,255,255,.94); padding: 8px 10px; border-radius: 7px; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; box-shadow: 0 2px 8px #23331d16; }
+    .live-dot { height: 7px; width: 7px; border-radius: 50%; background: #4b9c69; box-shadow: 0 0 0 3px #dcefe1; }
+    .map-controls { position: absolute; z-index: 5; right: 13px; top: 13px; display: grid; gap: 6px; }
+    .map-control { width: 33px; height: 33px; border-radius: 7px; border: 1px solid #e1e6e0; color: #47574e; background: rgba(255,255,255,.95); font-size: 17px; box-shadow: 0 2px 8px #23331d16; }
+    .map-status { position: absolute; z-index: 5; bottom: 13px; left: 13px; max-width: calc(100% - 26px); background: rgba(255,255,255,.95); border-radius: 8px; padding: 9px 12px; font-size: 10px; color: var(--muted); box-shadow: 0 2px 8px #23331d16; }
+    .map-status strong { color: var(--ink); font-size: 11px; }
+    .ride-list { display: grid; gap: 10px; }
+    .list-heading { display: flex; justify-content: space-between; align-items: center; padding: 1px 2px 0; }
+    .list-heading strong { font: 600 15px "Space Grotesk", sans-serif; }
+    .list-heading span { font-size: 11px; color: var(--muted); }
+    .ride-card { border: 1px solid var(--line); background: var(--paper); border-radius: 9px; padding: 13px 14px; transition: border-color .15s, transform .15s; }
+    .ride-card:hover, .ride-card.selected { border-color: #78b7ad; box-shadow: 0 8px 20px rgba(23,107,112,.09); transform: translateY(-1px); }
+    .ride-meta { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--muted); }
+    .verified { display: inline-flex; align-items: center; gap: 4px; color: #287a68; font-size: 10px; font-weight: 700; }
+    .ride-route { display: grid; grid-template-columns: 12px minmax(0,1fr) auto; gap: 9px; margin: 13px 0 12px; align-items: center; }
+    .route-dots { height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; }
+    .route-dots::before { content: ""; position: absolute; height: 27px; top: 9px; border-left: 1px dashed #a9b6ac; }
+    .route-dots i { height: 7px; width: 7px; border: 1.5px solid var(--green); background: white; border-radius: 50%; z-index: 1; }
+    .route-dots i:last-child { border-radius: 2px; background: var(--lime); border-color: #819e48; }
+    .route-city { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; }
+    .route-city + .route-city { margin-top: 13px; }
+    .route-city small { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .fare { font: 700 20px "Space Grotesk", sans-serif; text-align: right; }
+    .fare small { display: block; color: var(--muted); font: 500 10px "DM Sans", sans-serif; }
+    .ride-footer { border-top: 1px solid #eef0ed; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .driver-info { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; }
+    .driver-avatar { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; background: #d8f0e8; color: var(--green-deep); font-size: 10px; }
+    .driver-info small { display: block; font-size: 9px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    .driver-info small.owner-rating { color: #aa741c; font-weight: 700; }
+    .owner-review { display: flex; gap: 8px; align-items: flex-start; padding-top: 8px; margin-top: 8px; border-top: 1px solid #f0eee8; color: #6c6256; font-size: 10px; line-height: 1.45; }
+    .owner-review strong, .rating-stars { color: #d39122; white-space: nowrap; letter-spacing: .5px; }
+    .card-action { border: 0; background: var(--green); color: white; border-radius: 6px; padding: 8px 10px; font-size: 10px; font-weight: 700; }
+    .card-action:hover { background: var(--green-deep); }
+    .empty { border: 1px dashed #bfd4cc; border-radius: 9px; padding: 28px; text-align: center; color: var(--muted); font-size: 12px; background: var(--paper); }
+    .page-section { display: none; }
+    .page-section.visible { display: block; animation: reveal .24s ease-out; }
+    @keyframes reveal { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .stat-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 11px; margin-bottom: 16px; }
+    .stat-card { background: var(--paper); border: 1px solid var(--line); border-radius: 9px; padding: 15px; box-shadow: 0 4px 13px rgba(48,61,54,.035); }
+    .stat-card span { color: var(--muted); font-size: 11px; }
+    .stat-card strong { display: block; font: 600 23px "Space Grotesk", sans-serif; margin-top: 7px; }
+    .stat-card em { color: #27786c; font-style: normal; font-size: 10px; margin-top: 4px; display: block; }
+    .invite-layout { display: grid; grid-template-columns: minmax(220px,.72fr) minmax(0,1.28fr); gap: 14px; }
+    .invite-card, .invite-share { border: 1px solid var(--line); border-radius: 12px; padding: 22px; background: var(--paper); box-shadow: var(--shadow); }
+    .invite-card { color: white; border-color: transparent; background: radial-gradient(circle at 95% 5%,rgba(244,190,84,.45),transparent 40%),linear-gradient(145deg,#10494f,#176b70 72%,#23828a); }
+    .invite-card .eyebrow { color: #c4e4d9; }
+    .invite-balance { display: flex; align-items: baseline; gap: 8px; margin-top: 19px; }
+    .invite-balance strong { font: 700 42px/1 "Space Grotesk",sans-serif; }
+    .invite-balance span { color: #d4eae2; font-size: 13px; }
+    .invite-value { color: #f9d98d; font-size: 13px; }
+    .invite-card > p:last-child { color: #d4eae2; font-size: 11px; line-height: 1.6; margin: 16px 0 0; }
+    .invite-share h2 { margin: 7px 0; font: 600 19px "Space Grotesk",sans-serif; }
+    .invite-share > p { margin: 0 0 17px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .invite-share label, .invite-code-row span { color: var(--muted); font-size: 10px; font-weight: 700; }
+    .invite-link-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-top: 6px; }
+    .invite-link-row input { min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); font: 11px "DM Sans",sans-serif; }
+    .invite-code-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .invite-code-row strong { color: var(--green-deep); letter-spacing: 1.5px; font: 700 15px "Space Grotesk",sans-serif; }
+    .invite-code-row .secondary { padding: 7px 9px; font-size: 10px; }
+    .invite-demo-note { margin-top: 14px; }
+    .about-intro { display: grid; grid-template-columns: 70px minmax(0,1fr); align-items: start; gap: 17px; padding: 23px; border: 1px solid #eadbd2; border-radius: 12px; background: linear-gradient(120deg,#fff7ef,#f5edfc 54%,#eaf5e7); box-shadow: 0 8px 24px rgba(72,52,72,.05); }
+    .about-emblem { width: 62px; height: 62px; display: grid; place-items: center; border: 1px solid #efc9bd; border-radius: 18px; background: linear-gradient(145deg,#fff,#ffe8dc); color: #b64247; font: 700 22px "Space Grotesk",sans-serif; box-shadow: 0 5px 14px rgba(182,66,71,.12); }
+    .about-intro h2, .about-safety h2 { margin: 6px 0 8px; color: #3f334b; font: 600 21px/1.2 "Space Grotesk",sans-serif; }
+    .about-intro p, .about-safety p { max-width: 850px; margin: 0; color: #665e6b; font-size: 12px; line-height: 1.7; }
+    .about-heading { margin: 22px 2px 11px; }
+    .about-heading strong { font-size: 17px; }
+    .about-process { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 11px; }
+    .about-step { min-height: 164px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: white; box-shadow: 0 5px 16px rgba(31,56,47,.035); }
+    .about-step:nth-child(4n+1) > span { background: #fde9df; color: #ae5542; }
+    .about-step:nth-child(4n+2) > span { background: #e6edfb; color: #4565a4; }
+    .about-step:nth-child(4n+3) > span { background: #f7efd5; color: #8a6d26; }
+    .about-step:nth-child(4n+4) > span { background: #e5f2e5; color: #43734f; }
+    .about-step > span { width: 33px; height: 33px; display: grid; place-items: center; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .about-step h3 { margin: 12px 0 6px; color: var(--ink); font: 600 13px "Space Grotesk",sans-serif; }
+    .about-step p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .about-safety { margin-top: 15px; padding: 19px 21px; border: 1px solid #efdcb2; border-radius: 10px; background: linear-gradient(110deg,#fff9e9,#fff4ed); }
+    .about-safety .eyebrow { color: #9a7030; }
+    .about-safety p + p { margin-top: 8px; }
+    .table-wrap { background: var(--paper); border: 1px solid var(--line); border-radius: 9px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 680px; text-align: left; }
+    th { color: #62777a; background: #f3f7f3; text-transform: uppercase; font-size: 9px; letter-spacing: .7px; padding: 12px 14px; }
+    td { border-top: 1px solid #edf0ec; padding: 12px 14px; font-size: 11px; }
+    td strong { font-size: 11px; }
+    .status-pill { border-radius: 20px; padding: 4px 8px; display: inline-block; background: #e2f2ec; color: #287565; font-size: 9px; font-weight: 700; }
+    .status-pill.cancelled, .status-pill.suspended, .status-pill.declined { color: #a64d43; background: #fce9e3; }
+    .status-pill.pending { color: #93681f; background: #fbf0d8; }
+    .table-action { color: var(--green); background: transparent; border: 0; font-weight: 700; font-size: 10px; }
+    .account-photo { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
+    .route-form { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; background: white; border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+    .route-form .field label { font-size: 11px; }
+    .route-form .field input, .route-form .field select { height: 42px; font-size: 13px; }
+    .form-span { grid-column: 1 / -1; }
+    .form-note { font-size: 11px; color: #607774; line-height: 1.5; padding: 11px 12px; background: #eef6f1; border-radius: 7px; }
+    .owner-layout { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 15px; align-items: start; }
+    .fee-box { background: var(--green-deep); color: white; border-radius: 10px; padding: 19px; }
+    .fee-box .eyebrow { color: #b8e1d5; }
+    .fee-box h3 { font: 600 18px "Space Grotesk", sans-serif; margin: 9px 0 12px; }
+    .fee-row { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #ffffff2b; padding: 10px 0; font-size: 11px; color: #d9ece7; }
+    .fee-row b { color: white; }
+    .fee-box p { color: #bdd8d1; font-size: 10px; line-height: 1.5; margin: 10px 0 0; }
+    .modal-backdrop { position: fixed; z-index: 50; inset: 0; background: rgba(17,31,25,.42); display: none; place-items: center; padding: 18px; }
+    .modal-backdrop.open { display: grid; animation: fade .18s ease-out; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .modal { width: min(490px,100%); max-height: min(92vh,760px); overflow: auto; background: white; border-radius: 12px; box-shadow: 0 24px 70px #14271f3d; padding: 22px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 17px; gap: 12px; }
+    .modal-head h2 { font: 600 20px "Space Grotesk", sans-serif; margin: 0 0 5px; }
+    .modal-head p { color: var(--muted); margin: 0; font-size: 11px; }
+    .close-button { border: 0; background: #f1f4f0; color: #64716a; border-radius: 7px; height: 30px; width: 30px; font-size: 17px; }
+    .modal-form { display: grid; gap: 12px; }
+    .role-choice { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+    .role-choice button { border: 1px solid var(--line); background: white; color: var(--muted); border-radius: 7px; padding: 10px 5px; font-size: 10px; font-weight: 700; }
+    .role-choice button.chosen { border-color: #77a58b; background: #edf5ee; color: var(--green-deep); }
+    .auth-field { display: grid; gap: 6px; }
+    .auth-field label { color: var(--muted); font-size: 10px; font-weight: 700; }
+    .auth-field input { width: 100%; min-width: 0; height: 39px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; outline: none; font: inherit; font-size: 12px; }
+    .auth-field input:focus { border-color: #70a38c; box-shadow: 0 0 0 3px rgba(112,163,140,.14); }
+    .auth-field select, .auth-field textarea { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 7px; padding: 10px; color: var(--ink); outline: none; font: inherit; font-size: 12px; }
+    .auth-field textarea { min-height: 105px; resize: vertical; line-height: 1.5; }
+    .auth-field select:focus, .auth-field textarea:focus { border-color: #70a38c; box-shadow: 0 0 0 3px rgba(112,163,140,.14); }
+    .auth-owner-fields[hidden] { display: none; }
+    .profile-photo-preview { width: 48px; height: 48px; display: grid; place-items: center; overflow: hidden; border: 1px dashed #b9c9bb; border-radius: 50%; background: #f2f6f0; color: #64806b; font-size: 9px; }
+    .profile-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .license-photo-preview { width: 100%; max-width: 220px; min-height: 70px; display: grid; place-items: center; overflow: hidden; border: 1px dashed #b9c9bb; border-radius: 8px; background: #f2f6f0; color: #64806b; font-size: 10px; }
+    .license-photo-preview img { width: 100%; max-height: 140px; object-fit: contain; }
+    .form-hint { color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .demo-banner { border-radius: 7px; background: #f2f6ed; padding: 10px; color: #647a66; font-size: 10px; line-height: 1.5; }
+    .modal-price { background: #f4f7f3; border-radius: 8px; padding: 12px; }
+    .modal-price div { display: flex; justify-content: space-between; padding: 4px 0; color: #66736c; font-size: 11px; }
+    .modal-price div.total { color: var(--ink); border-top: 1px solid #dce5dc; padding-top: 9px; margin-top: 4px; font-weight: 700; font-size: 13px; }
+    .booking-terms { display: flex; align-items: flex-start; gap: 9px; color: #566b68; font-size: 11px; line-height: 1.5; }
+    .booking-terms input { accent-color: var(--green); margin: 2px 0 0; }
+    .booking-terms button { border: 0; padding: 0; background: transparent; color: var(--green); text-decoration: underline; font: inherit; font-weight: 700; }
+    .policy-list { padding-left: 19px; color: #566b68; font-size: 12px; line-height: 1.65; }
+    .policy-list li + li { margin-top: 8px; }
+    .trips-policy-note { margin-top: 12px; }
+    .chat-thread { display: grid; gap: 9px; max-height: 280px; overflow-y: auto; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #f5f8f4; }
+    .chat-message { justify-self: start; max-width: 85%; padding: 9px 11px; border-radius: 10px 10px 10px 3px; background: #fff; box-shadow: 0 2px 6px rgba(37,69,68,.06); color: var(--ink); font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .chat-message.mine { justify-self: end; border-radius: 10px 10px 3px 10px; background: #dff0eb; }
+    .chat-message small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .chat-compose { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+    .chat-compose input { min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; font: inherit; font-size: 12px; }
+    .toast { position: fixed; z-index: 80; bottom: 22px; left: 50%; transform: translate(-50%,20px); opacity: 0; pointer-events: none; background: var(--green-deep); color: white; border-radius: 8px; padding: 11px 15px; font-size: 12px; box-shadow: var(--shadow); transition: .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%,0); }
+    .mobile-nav { display: none; }
+    .leaflet-container { font: 11px "DM Sans", sans-serif; background: transparent; }
+    .leaflet-control-attribution { font-size: 9px !important; }
+    .leaflet-popup-content-wrapper { border-radius: 8px; }
+    .leaflet-popup-content { margin: 10px 12px; font: 11px "DM Sans", sans-serif; }
+    .leaflet-marker-icon.custom-pin { background: var(--green); border: 3px solid white; border-radius: 50% 50% 50% 4px; box-shadow: 0 2px 7px #1227; transform: rotate(-45deg); }
+    .leaflet-marker-icon.custom-pin::after { content: ""; width: 7px; height: 7px; background: white; position: absolute; border-radius: 50%; top: 5px; left: 5px; }
+    @media (max-width: 1050px) {
+      .layout { grid-template-columns: 190px minmax(0,1fr); padding: 20px; gap: 17px; }
+      .content-grid { grid-template-columns: minmax(0,1fr) minmax(300px,.9fr); }
+      .search-panel { grid-template-columns: minmax(100px,1fr) 30px minmax(100px,1fr) minmax(100px,.7fr) auto; }
+      .map-panel { height: 510px; }
+    }
+    @media (max-width: 780px) {
+      .topbar { height: 62px; padding: 0 16px; }
+      .brand-tag, .secure-note { display: none; }
+      .layout { display: block; padding: 19px 16px 82px; }
+      .sidebar { display: none; }
+      .page-head h1 { font-size: 26px; }
+      .journey-banner { min-height: 132px; padding: 15px; }
+      .journey-copy strong { font-size: 17px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .map-panel { height: 330px; }
+      .ride-list { grid-template-columns: 1fr; }
+      .search-panel { grid-template-columns: 1fr 32px 1fr; gap: 9px; }
+      .search-panel .field:nth-of-type(3) { grid-column: 1 / 3; }
+      .search-button { grid-column: 3; grid-row: 2; width: 100%; }
+      .owner-layout { grid-template-columns: 1fr; }
+      .fee-box { order: -1; }
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      .about-process { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .invite-layout { grid-template-columns: 1fr; }
+      .mobile-nav { display: flex; position: fixed; z-index: 18; bottom: 0; left: 0; right: 0; height: 62px; background: white; border-top: 1px solid var(--line); justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+      .mobile-nav button { border: 0; background: transparent; color: var(--muted); display: grid; justify-items: center; gap: 3px; font-size: 9px; padding: 4px; }
+      .mobile-nav button.active { color: var(--green); font-weight: 700; }
+      .mobile-nav svg { width: 17px; height: 17px; }
+      .route-form { padding: 15px; }
+    }
+    @media (max-width: 470px) {
+      .role-button { gap: 6px; padding-right: 7px; font-size: 10px; }
+      .avatar { width: 27px; height: 27px; }
+      .brand-name { font-size: 18px; }
+      .layout { padding-left: 12px; padding-right: 12px; }
+      .page-head { align-items: center; }
+      .page-head h1 { font-size: 23px; }
+      .journey-banner { min-height: 126px; }
+      .journey-copy p { max-width: 72%; font-size: 10px; }
+      .journey-pin { font-size: 8px; }
+      .journey-car { width: 33px; height: 24px; }
+      .primary { padding: 10px; font-size: 10px; }
+      .search-panel { padding: 11px; }
+      .route-form { grid-template-columns: 1fr; }
+      .form-span { grid-column: auto; }
+      .map-panel { height: 290px; }
+      .about-intro { grid-template-columns: 1fr; gap: 12px; padding: 17px; }
+      .about-intro h2, .about-safety h2 { font-size: 18px; }
+      .about-process { grid-template-columns: 1fr; }
+      .invite-card, .invite-share { padding: 17px; }
+      .about-step { min-height: 0; }
+      .about-safety { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      .journey-route { stroke-dashoffset: 0; }
+      .journey-car { left: calc(94% - 39px); top: 39%; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="culture-backdrop" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="cultureMountain" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#5d9b87" stop-opacity=".13"/><stop offset="1" stop-color="#176b70" stop-opacity=".025"/></linearGradient>
+      <pattern id="cultureWeave" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M21 2 39 21 21 40 3 21 21 2Z" fill="none" stroke="#d39142" stroke-width="1"/><path d="M21 10 31 21 21 32 11 21 21 10Z" fill="none" stroke="#176b70" stroke-width="1"/></pattern>
+    </defs>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g opacity=".13" transform="translate(1240 275)" stroke="#c87945">
+        <circle r="103" stroke-width="1.5"/><circle r="84" stroke-width="1"/><circle r="60" stroke-width="1"/>
+        <path d="M0-103Q16-76 0-60Q-16-76 0-103ZM0 103Q16 76 0 60Q-16 76 0 103ZM-103 0Q-76-16-60 0Q-76 16-103 0ZM103 0Q76-16 60 0Q76 16 103 0ZM-73-73Q-42-73-42-42Q-73-42-73-73ZM73 73Q42 73 42 42Q73 42 73 73ZM73-73Q73-42 42-42Q42-73 73-73ZM-73 73Q-73 42-42 42Q-42 73-73 73Z" stroke-width="2"/>
+        <circle r="27" stroke-width="2"/><path d="M0-16 16 0 0 16-16 0 0-16Z" stroke-width="1.5"/>
+      </g>
+      <g opacity=".16">
+        <path d="M650 78Q850 112 1040 78T1438 89" stroke="#176b70" stroke-width="2"/>
+        <path d="m720 83 36 5-14 29-20-6ZM780 92l37 2-12 31-21-4ZM842 95l37-4-8 31-22 1ZM905 91l36-8-3 32-22 5ZM969 81l35-10 3 31-21 7ZM1034 74l35-11 5 31-21 8Z" fill="#df6757" stroke="#fffefa" stroke-width="2"/>
+        <path d="m780 92 37 2-12 31-21-4Z" fill="#f4be54"/><path d="m842 95 37-4-8 31-22 1Z" fill="#4b9a78"/><path d="m905 91 36-8-3 32-22 5Z" fill="#648bc2"/><path d="m969 81 35-10 3 31-21 7Z" fill="#a67baa"/>
+      </g>
+      <g opacity=".14" stroke="#176b70" stroke-width="2">
+        <path d="M0 792 146 670l92 76 153-181 144 196 154-116 137 143 170-213 149 183 124-116 171 142v216H0Z" fill="url(#cultureMountain)" stroke="none"/>
+        <path d="m338 565 53 75-49-23-27 14-30-12-39 20 71-98 21 24ZM907 575l46 83-44-24-25 11-28-13-34 19 61-100 24 24ZM1260 657l37 61-37-17-20 11-24-9-31 15 53-75 22 14Z" fill="#fffefa" fill-opacity=".38" stroke="none"/>
+        <path d="M0 828q175-70 330 2t302-1q180-76 334 0t290-3q96-36 184-15M0 866q175-66 330 0t302 2q180-71 334 0t290-2q96-34 184-13M0 906q175-60 330 0t302 2q180-65 334 0t290-2q96-30 184-11" stroke="#c87945" stroke-width="2"/>
+        <path d="M70 955q130-26 242 0t231 0q132-27 258 0t267 0q123-24 255 0" stroke="#176b70" stroke-width="2"/>
+      </g>
+      <g opacity=".09" fill="url(#cultureWeave)" stroke="none">
+        <path d="M0 150h160v160H0zM1280 700h160v160h-160z"/>
+      </g>
+    </g>
+  </svg>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="NepaliSafari home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 56 42" fill="none"><path d="M5 28h4l3-10a4 4 0 0 1 4-3h17a5 5 0 0 1 4 2l6 8 5 2a3 3 0 0 1 2 3v3H5v-5Z" fill="#DC143C"/><path d="m15 18-2 7h19l-5-7H15Z" fill="#d7edfa"/><circle cx="16" cy="32" r="4" fill="#263749" stroke="#fff" stroke-width="2"/><circle cx="39" cy="32" r="4" fill="#263749" stroke="#fff" stroke-width="2"/><path d="M7 36h39" stroke="#17499A" stroke-width="2.5" stroke-linecap="round"/><text x="28" y="12" text-anchor="middle" fill="#17499A" font-family="Arial,sans-serif" font-size="12" font-weight="800" letter-spacing="1">NS</text></svg></span>
+        <span class="brand-name">Nepali<span>Safari</span></span><span class="brand-tag">Explore Nepal together.</span>
+      </a>
+      <div class="top-actions">
+        <span class="secure-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 4.5-2.8 8-7 10-4.2-2-7-5.5-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Your trips, your terms</span>
+        <button class="language-button" id="languageButton" type="button" aria-label="Change language">नेपाली</button>
+        <button class="role-button" id="accountButton" aria-label="Switch account"><span class="avatar" id="headerAvatar">JD</span><span class="account-copy"><span id="headerName">Jamie Davis</span><small id="headerId">WF-1048</small></span><span class="caret">▼</span></button>
+      </div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="welcome"><div class="eyebrow" id="welcomeEyebrow">YOUR NEPALISAFARI</div><h2 id="welcomeName">Good morning,<br>Jamie.</h2><p id="welcomeSub">Ready to find your next ride?</p></div>
+        <div class="nav-label">Workspace</div>
+        <nav class="nav-list" id="desktopNav"></nav>
+        <div class="side-divider"></div>
+        <button class="nav-item" id="locationButton"><svg viewBox="0 0 24 24" fill="none"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg><span id="locationLabel">Share my location</span></button>
+        <div class="trust-note"><strong>Travel on your terms</strong><p>Choose who joins your route. Your live location is only shared when you turn it on.</p></div>
+      </aside>
+      <main>
+        <section class="page-section visible" id="explorePage">
+          <div class="page-head"><div><div class="eyebrow" id="pageEyebrow">THE ROAD, TOGETHER</div><h1 id="pageTitle">Find your people.</h1><p id="pageSubtitle">Share the ride. Split the cost. Keep moving.</p></div><button class="primary" id="headAction"><span aria-hidden="true">＋</span><span>Offer a ride</span></button></div>
+          <div class="journey-banner" role="img" aria-label="A vehicle traveling across Nepal from Mechi to Mahakali">
+            <div class="journey-copy"><div class="eyebrow">A JOURNEY ACROSS NEPAL</div><strong>One road. A thousand stories.</strong><p>Travel together, from Mechi to Mahakali.</p></div>
+            <svg class="journey-scenery" viewBox="0 0 1000 160" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="journeyHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9c878"/><stop offset="1" stop-color="#3e8a68"/></linearGradient><linearGradient id="journeyPeak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#90749f"/><stop offset="1" stop-color="#d49b89"/></linearGradient></defs>
+              <circle cx="878" cy="46" r="24" fill="#f4b54c" opacity=".76"/><circle cx="878" cy="46" r="32" fill="none" stroke="#eea95a" stroke-width="1.5" stroke-dasharray="2 5" opacity=".8"/>
+              <path d="M0 111 76 59l48 37 82-65 70 68 73-44 75 58 80-81 86 77 78-57 72 50 82-82 74 73 72-49 102 61v55H0Z" fill="url(#journeyPeak)" opacity=".72"/>
+              <path d="m171 31 35 68-31-19-17 8-18-11-26 14 40-60 17 14Z" fill="#fff" opacity=".8"/><path d="m641 49 31 58-29-15-16 7-16-9-23 11 36-52 16 12Z" fill="#fff" opacity=".78"/>
+              <path d="M0 129 105 91l74 27 105-56 88 68 104-43 91 38 90-65 110 64 79-40 89 37 65-59v98H0Z" fill="url(#journeyHill)" opacity=".91"/>
+              <path d="M32 128q62-24 111-8t99-2M570 131q65-26 119-8t102-4M782 139q69-28 143-6" fill="none" stroke="#f8e9a8" stroke-width="3" opacity=".84"/>
+              <path d="M0 146Q150 132 277 143t238-2q146-19 244 2t241-5" fill="none" stroke="#fff" stroke-width="20" opacity=".47"/>
+              <path d="M560 20Q655 37 757 18T967 29" fill="none" stroke="#684d70" stroke-width="2" opacity=".68"/>
+              <path d="m580 24 19 3-8 16-10-3Z" fill="#e74c55"/><path d="m610 28 19 2-9 17-10-4Z" fill="#f5c84c"/><path d="m640 30 19 1-9 17-10-4Z" fill="#48a878"/><path d="m670 30 19-1-8 18-10-3Z" fill="#4a83c2"/><path d="m700 28 19-3-7 18-10-2Z" fill="#9c6bb2"/><path d="m730 24 19-4-6 18-10-1Z" fill="#ed7e45"/>
+              <path class="journey-route-glow" d="M48 106C190 81 256 121 393 99S620 81 730 103s153-2 222-25"/>
+              <path class="journey-route" d="M48 106C190 81 256 121 393 99S620 81 730 103s153-2 222-25"/>
+            </svg>
+            <span class="journey-pin journey-pin--start">MECHI</span><span class="journey-pin journey-pin--end">MAHAKALI</span>
+            <span class="journey-car" aria-hidden="true"><svg viewBox="0 0 48 32" fill="none"><path d="m7 19 3-8c.6-1.6 2-2.6 3.8-2.6h15.6c1.4 0 2.6.6 3.5 1.8l5 6.8 4.6 1.7c1 .4 1.5 1.2 1.5 2.3v3.4c0 1.2-.9 2.1-2.1 2.1H6c-1.2 0-2-.9-2-2.1v-3c0-1.2 1.2-2.3 3-2.4Z" fill="currentColor"/><path d="m13 11-2 6h23l-4.1-5.4a1.9 1.9 0 0 0-1.5-.7H13Z" fill="#eaf4e9"/><circle cx="12" cy="25" r="3.3" fill="#203c31" stroke="#fff" stroke-width="1.5"/><circle cx="35" cy="25" r="3.3" fill="#203c31" stroke="#fff" stroke-width="1.5"/><path d="M7 20h3" stroke="#d7ec8b" stroke-width="2" stroke-linecap="round"/></svg></span>
+          </div>
+          <form class="search-panel" id="searchForm">
+            <div class="field"><label for="searchFrom">LEAVING FROM</label><input id="searchFrom" placeholder="City or neighborhood" autocomplete="off"></div>
+            <button class="swap" type="button" id="swapButton" aria-label="Swap locations">↔</button>
+            <div class="field"><label for="searchTo">GOING TO</label><input id="searchTo" placeholder="Where to?" autocomplete="off"></div>
+            <div class="field"><label for="searchDate">WHEN</label><input id="searchDate" type="date"></div>
+            <button class="primary search-button" type="submit"><span aria-hidden="true">⌕</span> Find rides</button>
+          </form>
+          <div class="content-grid">
+            <div class="map-panel" aria-label="Map showing available shared rides">
+              <div class="map-fallback" id="mapFallback"></div><div id="map"></div>
+              <div class="map-legend"><span class="live-dot"></span><span id="mapLegendText">Rides leaving soon</span></div>
+              <div class="map-controls"><button class="map-control" type="button" id="zoomIn" aria-label="Zoom in">+</button><button class="map-control" type="button" id="zoomOut" aria-label="Zoom out">−</button></div>
+              <div class="map-status"><strong id="mapStatusTitle">Pacific Northwest</strong><br><span id="mapStatusText">Select a ride to see its route</span></div>
+            </div>
+            <div class="ride-list"><div class="list-heading"><strong id="listTitle">Rides near you</strong><span id="rideCount"></span></div><div id="rideCards"></div></div>
+          </div>
+        </section>
+        <section class="page-section" id="ownerPage">
+          <div class="page-head"><div><div class="eyebrow">YOUR ROUTE, YOUR CALL</div><h1>Offer a ride.</h1><p>Post your regular route or a one-time trip.</p></div></div>
+          <div class="owner-layout">
+            <form class="route-form" id="routeForm">
+              <div class="field"><label for="routeFrom">FROM</label><input id="routeFrom" required placeholder="e.g. Seattle, WA"></div>
+              <div class="field"><label for="routeTo">TO</label><input id="routeTo" required placeholder="e.g. Portland, OR"></div>
+              <div class="field"><label for="routeDate">TRAVEL DATE</label><input id="routeDate" required type="date"></div>
+              <div class="field"><label for="routeTime">DEPARTURE TIME</label><input id="routeTime" required type="time" value="09:00"></div>
+              <div class="field"><label for="routeSeats">OPEN SEATS</label><select id="routeSeats"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+              <div class="field"><label for="routeDistance">ROUTE DISTANCE (KM)</label><input id="routeDistance" required type="number" min="1" step="1" placeholder="e.g. 200"><small id="routeDistanceNote">Enter an approximate road distance.</small></div>
+              <div class="field"><label for="routeFare">ESTIMATED FARE PER PASSENGER (NPR)</label><input id="routeFare" type="number" readonly aria-describedby="routeCostSummary"></div>
+              <div class="form-note form-span" id="routeCostSummary">Estimated trip cost will be split fairly between the driver and passenger seats.</div>
+              <div class="field"><label for="routeRepeat">REPEAT ROUTE</label><select id="routeRepeat"><option value="once">One-time trip</option><option value="weekly">Every week</option><option value="weekdays">Every weekday</option></select></div>
+              <div class="field form-span"><label for="routeVehicle">VEHICLE</label><input id="routeVehicle" required placeholder="e.g. Blue Honda Civic · 2022"></div>
+              <div class="form-note form-span">Passengers request a seat. Agree the fare and payment arrangement directly; online payments are not available yet.</div>
+              <button class="primary form-span" type="submit">Publish this route</button>
+            </form>
+            <aside class="fee-box"><div class="eyebrow">PAYMENT STATUS</div><h3>Online payments are unavailable.</h3><p>eSewa and Khalti processing must be integrated and merchant credentials configured before online payment can be accepted.</p></aside>
+          </div>
+          <div style="height:18px"></div><div class="list-heading" style="margin-bottom:10px"><strong>Your posted routes</strong><span id="ownerRouteCount"></span></div><div class="table-wrap"><table><thead><tr><th>Route</th><th>Date / repeat</th><th>Seats</th><th>Fare</th><th>Status</th><th>Manage</th></tr></thead><tbody id="ownerRows"></tbody></table></div>
+        </section>
+        <section class="page-section" id="tripsPage">
+          <div class="page-head"><div><div class="eyebrow">YOUR NEPALISAFARI</div><h1>Your trips.</h1><p>Bookings and rides you've shared.</p></div><button class="secondary" id="tripsExplore">Find a ride</button></div>
+          <div class="stat-grid" id="passengerStats"></div><div class="table-wrap"><table><thead><tr><th>Route</th><th>Departure</th><th>Driver / rider</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody id="bookingRows"></tbody></table></div>
+          <div class="demo-banner trips-policy-note">Bookings, messages, complaints, and ratings are saved on the NepaliSafari server running on this computer. Chat is available after the vehicle owner accepts your request.</div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>My complaints</strong><span>Reports submitted about a booked ride</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Report</th><th>Route</th><th>Vehicle owner</th><th>Issue</th><th>Submitted</th><th>Status</th></tr></thead><tbody id="myComplaintRows"></tbody></table></div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>My ratings</strong><span>Reviews you've left for vehicle owners</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Route</th><th>Vehicle owner</th><th>Rating</th><th>Comment</th><th>Submitted</th></tr></thead><tbody id="myRatingRows"></tbody></table></div>
+        </section>
+        <section class="page-section" id="invitePage">
+          <div class="page-head"><div><div class="eyebrow">SHARE THE JOURNEY</div><h1>Invite friends. Earn rewards.</h1><p>When a friend joins with your invite and completes their first trip, you earn 10 points.</p></div></div>
+          <div class="invite-layout">
+            <article class="invite-card">
+              <div class="eyebrow">YOUR REFERRAL REWARD</div>
+              <div class="invite-balance"><strong id="invitePoints">0</strong><span>points</span></div>
+              <p class="invite-value"><strong id="inviteRupees">NPR 0</strong> · 1 point = NPR 1</p>
+              <p>Earn 10 points for each new passenger who joins with your invite and completes a trip confirmed by both travellers. Points have no cash payout until a rewards service is configured.</p>
+            </article>
+            <article class="invite-share">
+              <div class="eyebrow">YOUR INVITE LINK</div>
+              <h2>Bring a travel friend along.</h2>
+              <p>Share your link. Your friend can enter your code when creating a new passenger account.</p>
+              <label for="inviteLink">Invite link</label>
+              <div class="invite-link-row"><input id="inviteLink" readonly aria-label="Shareable invite link"><button class="primary" id="copyInvite" type="button">Copy link</button></div>
+              <div class="invite-code-row"><span>Your invite code</span><strong id="inviteCode"></strong><button class="secondary" id="copyInviteCode" type="button">Copy code</button></div>
+            </article>
+          </div>
+          <div class="demo-banner invite-demo-note">This local installation is available only on this computer. For other people to join, NepaliSafari must be deployed online. Referral points are recorded in the account but cannot currently be redeemed.</div>
+          <div class="list-heading" style="margin:22px 2px 10px"><strong>Your invites</strong><span>One reward per newly invited passenger</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Invited passenger</th><th>Joined</th><th>Status</th><th>Reward</th></tr></thead><tbody id="inviteRows"></tbody></table></div>
+        </section>
+        <section class="page-section" id="adminPage">
+          <div class="page-head"><div><div class="eyebrow">PLATFORM CONTROL</div><h1>Admin overview.</h1><p>Review platform activity and manage records.</p></div><button class="secondary" id="exportButton">Export data</button></div>
+          <div class="stat-grid" id="adminStats"></div>
+          <div class="list-heading" style="margin:18px 2px 10px"><strong>All ride listings</strong><span>Admin can suspend or restore a listing</span></div><div class="table-wrap"><table><thead><tr><th>Route / owner</th><th>Date / repeat</th><th>Seats</th><th>Passenger total</th><th>Status</th><th>Manage</th></tr></thead><tbody id="adminRideRows"></tbody></table></div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>Accounts</strong><span>Only complete profiles can be reviewed; uploaded identity images are encrypted at rest</span></div><div class="table-wrap"><table><thead><tr><th>Account ID</th><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Owner safety details</th><th>ID review</th><th>Account status</th><th>Manage</th></tr></thead><tbody id="accountRows"></tbody></table></div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>Bookings and payments</strong><span>Online payments are unavailable until gateway processing is implemented</span></div><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Passenger</th><th>Route</th><th>Payment method</th><th>Fare</th><th>Payment received</th><th>Status</th></tr></thead><tbody id="paymentRows"></tbody></table></div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>Passenger complaints</strong><span>Reports submitted about booked rides</span></div><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Passenger</th><th>Vehicle owner</th><th>Route</th><th>Issue</th><th>Details</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead><tbody id="complaintRows"></tbody></table></div>
+          <div class="list-heading" style="margin:20px 2px 10px"><strong>Passenger ratings</strong><span>Reviews are linked to completed bookings</span></div><div class="table-wrap"><table><thead><tr><th>Passenger</th><th>Vehicle owner</th><th>Route</th><th>Rating</th><th>Comment</th><th>Submitted</th></tr></thead><tbody id="ratingRows"></tbody></table></div>
+        </section>
+        <section class="page-section" id="aboutPage">
+          <div class="page-head"><div><div class="eyebrow">OUR STORY</div><h1>About NepaliSafari.</h1><p>A simpler way to share the road and discover Nepal together.</p></div></div>
+          <article class="about-intro">
+            <div class="about-emblem" aria-hidden="true">NS</div>
+            <div><div class="eyebrow">MADE FOR THE JOURNEY</div><h2>Connecting people, one shared ride at a time.</h2><p>NepaliSafari helps passengers find seats on journeys vehicle owners are already making. It brings routes, clear per-seat prices, and trip details together so people can plan a more convenient journey across Nepal.</p></div>
+          </article>
+          <div class="list-heading about-heading"><strong>How NepaliSafari works</strong><span>From finding a route to completing a trip</span></div>
+          <div class="about-process">
+            <article class="about-step"><span>01</span><h3>Find a journey</h3><p>Passengers enter their departure, destination, and travel date to browse available shared rides and compare the route, seats, and fare.</p></article>
+            <article class="about-step"><span>02</span><h3>Owners offer seats</h3><p>Vehicle owners post their route, departure time, open seats, vehicle information, and an estimated fare based on distance and shared travel costs.</p></article>
+            <article class="about-step"><span>03</span><h3>Request a seat</h3><p>Passengers review and accept the booking terms before sending a seat request. The vehicle owner can accept or decline it in My trips.</p></article>
+            <article class="about-step"><span>04</span><h3>Chat and travel</h3><p>Once the owner accepts, passenger and owner can chat to coordinate. Both travellers confirm trip completion in their accounts.</p></article>
+          </div>
+          <div class="about-safety"><div class="eyebrow">SAFETY AND TRANSPARENCY</div><h2>Clear details. Safer journeys.</h2><p>Accounts, rides, bookings, messages, complaints, and reviews are stored in the local server database. Profile and driving-licence images are encrypted before storage. Administrators can review complete owner profiles; this is an internal review, not an official government identity check.</p><p><strong>Local installation:</strong> This app currently runs only on this computer. Password sign-in is active. Online payments, public hosting, HTTPS, account recovery, and independent identity verification still need to be configured before the service is opened to the public. Do not expose the local server to the internet.</p></div>
+        </section>
+      </main>
+    </div>
+    <nav class="mobile-nav" id="mobileNav" aria-label="Main navigation"></nav>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="presentation"><section class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    (() => {
+      const today = new Date();
+      const iso = (offset) => { const day = new Date(today); day.setDate(day.getDate() + offset); return day.toISOString().slice(0, 10); };
+      const translations = {
+        ne: {
+          'Good trips, shared.':'साझा यात्रा, राम्रो यात्रा।','Your trips, your terms':'तपाईंको यात्रा, तपाईंको निर्णय','YOUR WAYFARE':'तपाईंको वेफेयर','DRIVER WORKSPACE':'चालक कार्यक्षेत्र','ADMIN WORKSPACE':'प्रशासक कार्यक्षेत्र','Workspace':'कार्यस्थल','Find a ride':'यात्रा खोज्नुहोस्','Find rides':'यात्रा खोज्नुहोस्','Find a shared ride.':'साझा यात्रा खोज्नुहोस्।','Find your people.':'आफ्ना सहयात्री खोज्नुहोस्।','My trips':'मेरा यात्राहरू','Offer a ride':'यात्रा प्रस्ताव गर्नुहोस्','Post a route':'मार्ग पोस्ट गर्नुहोस्','Overview':'अवलोकन','Ride listings':'यात्रा सूची','Share my location':'मेरो स्थान साझा गर्नुहोस्','Stop sharing location':'स्थान साझा गर्न रोक्नुहोस्','Travel on your terms':'आफ्नो तरिकाले यात्रा गर्नुहोस्','Choose who joins your route. Your live location is only shared when you turn it on.':'आफ्नो यात्रामा को सहभागी हुने छान्नुहोस्। तपाईंले अनुमति दिएपछि मात्र स्थान साझा हुन्छ।','THE ROAD, TOGETHER':'सँगैको यात्रा','A JOURNEY ACROSS NEPAL':'नेपालभरको यात्रा','One road. A thousand stories.':'एउटै बाटो, हजारौँ कथा।','Travel together, from Mechi to Mahakali.':'मेचीदेखि महाकालीसम्म सँगै यात्रा गरौँ।','MECHI':'मेची','MAHAKALI':'महाकाली','A vehicle traveling across Nepal from Mechi to Mahakali':'मेचीदेखि महाकालीसम्म नेपाल पार गर्दै गरेको सवारी','Share the ride. Split the cost. Keep moving.':'यात्रा साझा गर्नुहोस्। खर्च बाँड्नुहोस्। अघि बढ्नुहोस्।','Need a lift on your days off? Browse the road ahead.':'यात्रामा जानु छ? उपलब्ध मार्गहरू हेर्नुहोस्।','Leaving from':'कहाँबाट','Going to':'कहाँसम्म','LEAVING FROM':'कहाँबाट','GOING TO':'कहाँसम्म','WHEN':'मिति','City or neighborhood':'सहर वा ठाउँ','Where to?':'कहाँ जाने?','Swap locations':'स्थान साट्नुहोस्','Rides leaving soon':'छिट्टै छुट्ने यात्रा','Pacific Northwest':'नेपाल','Select a ride to see its route':'मार्ग हेर्न यात्रा छान्नुहोस्','Rides near you':'नजिकका यात्राहरू','No rides match those places yet. Try a nearby city or post the route you need.':'यी ठाउँका लागि यात्रा भेटिएन। अर्को सहर खोज्नुहोस् वा आफ्नो मार्ग पोस्ट गर्नुहोस्।','ID checked':'पहिचान जाँच गरिएको','Request seat':'सिट अनुरोध गर्नुहोस्','per passenger':'प्रति यात्रु','seat left':'सिट बाँकी','seats left':'सिट बाँकी','YOUR ROUTE, YOUR CALL':'तपाईंको मार्ग, तपाईंको निर्णय','Offer a ride.':'यात्रा पोस्ट गर्नुहोस्।','Post your regular route or a one-time trip.':'नियमित वा एकपटकको यात्रा पोस्ट गर्नुहोस्।','FROM':'कहाँबाट','TO':'कहाँसम्म','TRAVEL DATE':'यात्रा मिति','DEPARTURE TIME':'प्रस्थान समय','OPEN SEATS':'खाली सिट','BASE SHARE PER PASSENGER (NPR)':'प्रति यात्रुको आधार भाडा (रु.)','REPEAT ROUTE':'दोहोरिने यात्रा','One-time trip':'एकपटकको यात्रा','Every week':'हरेक हप्ता','Every weekday':'हरेक कार्यदिन','VEHICLE':'सवारी साधन','e.g. Seattle, WA':'जस्तै: काठमाडौं','e.g. Portland, OR':'जस्तै: पोखरा','e.g. Blue Honda Civic · 2022':'जस्तै: हुन्डाई i20 · २०२२','Your listing shows the passenger checkout total and your payout before they book. Exact location is never shown on public listings.':'यात्रा बुक हुनुअघि यात्रुले तिर्ने र तपाईंले पाउने रकम देखिन्छ। तपाईंको ठ्याक्कै स्थान सार्वजनिक हुँदैन।','CLEAR FROM THE START':'सुरुदेखि नै स्पष्ट','See the split.':'भाडा बाँडफाँट।','Base trip share':'आधार भाडा','Passenger pays':'यात्रुले तिर्ने','Your payout':'तपाईंले पाउने','The 5% passenger fee and 5% owner deduction are separate. In this demo, the difference goes to the platform; live payouts are not processed.':'यात्रुको ५% शुल्क र चालकबाट कट्ने ५% छुट्टाछुट्टै हुन्। यो डेमोमा बाँकी रकम प्लेटफर्मको हिस्सा हो; वास्तविक भुक्तानी हुँदैन।','Your posted routes':'तपाईंका पोस्ट गरिएका मार्ग','Route':'मार्ग','Date / repeat':'मिति / दोहोरिने','Seats':'सिट','Passenger total':'यात्रुको जम्मा','Status':'स्थिति','Manage':'व्यवस्थापन','No routes yet. Add your first trip above.':'अहिलेसम्म मार्ग छैन। माथि पहिलो यात्रा थप्नुहोस्।','YOUR WAYFARE':'तपाईंको वेफेयर','Your trips.':'तपाईंका यात्राहरू।','Bookings and rides you\'ve shared.':'तपाईंका बुकिङ र साझा यात्राहरू।','Find a ride':'यात्रा खोज्नुहोस्','Confirmed rides':'पुष्टि भएका यात्रा','Seats booked':'बुक भएका सिट','Across your Wayfare trips':'तपाईंका सबै यात्रामा','Total trip spend':'जम्मा यात्रा खर्च','Your payout':'तपाईंले पाउने','Demo amounts only':'डेमो रकम मात्र','Departure':'प्रस्थान','Driver / rider':'चालक / यात्रु','Amount':'रकम','Cancel':'रद्द गर्नुहोस्','No trips yet. Your next shared ride starts here.':'अहिलेसम्म यात्रा छैन। यहाँबाट साझा यात्रा सुरु गर्नुहोस्।','PLATFORM CONTROL':'प्लेटफर्म नियन्त्रण','Admin overview.':'प्रशासक अवलोकन।','Review platform activity and manage demo records.':'प्लेटफर्म गतिविधि हेर्नुहोस् र डेमो विवरण व्यवस्थापन गर्नुहोस्।','Export data':'डाटा निर्यात','Member accounts':'सदस्य खाता','Across all roles':'सबै भूमिकाका','Ride listings':'यात्रा सूची','active now':'सक्रिय','Demo bookings':'डेमो बुकिङ','Confirmed and cancelled':'पुष्टि र रद्द भएका','Platform share':'प्लेटफर्मको हिस्सा','Simulated only':'सिमुलेसन मात्र','All ride listings':'सबै यात्रा सूची','Admin can suspend or restore a listing':'प्रशासकले यात्रा रोक्न वा पुनःसुरु गर्न सक्छ','Accounts':'खाताहरू','Demo account records':'डेमो खाता विवरण','Payments':'भुक्तानी','Simulated demo checkouts':'डेमो भुक्तानी मात्र','Route / owner':'मार्ग / चालक','Account ID':'खाता आईडी','Name':'नाम','Role':'भूमिका','Email':'इमेल','Reference':'सन्दर्भ','Passenger':'यात्रु','Paid':'तिरेको','Owner payout':'चालकले पाउने','No rides listed.':'कुनै यात्रा सूचीबद्ध छैन।','No demo payments yet.':'अहिलेसम्म डेमो भुक्तानी छैन।','active':'सक्रिय','confirmed':'पुष्टि भयो','cancelled':'रद्द भयो','paused':'रोकिएको','suspended':'निलम्बित','Pause':'रोक्नुहोस्','Restore':'पुनःसुरु गर्नुहोस्','Suspend':'निलम्बन गर्नुहोस्','One-time':'एकपटक','Weekly':'साप्ताहिक','Weekdays':'कार्यदिन','ONE SEAT, ONE GOOD TRIP':'एउटा सिट, राम्रो यात्रा','Confirm your seat.':'आफ्नो सिट पुष्टि गर्नुहोस्।','DRIVER AND VEHICLE':'चालक र सवारी साधन','Shared trip cost':'साझा यात्राको भाडा','Passenger platform fee (5%)':'यात्रु प्लेटफर्म शुल्क (५%)','Total due':'तिर्नुपर्ने जम्मा','PAYMENT METHOD':'भुक्तानी विधि','Choose payment method':'भुक्तानी विधि छान्नुहोस्','Demo checkout only. No card details are collected and no real payment is processed. Owner payout shown here:':'डेमो भुक्तानी मात्र। कार्ड विवरण लिइँदैन र वास्तविक भुक्तानी हुँदैन। चालकले पाउने रकम:','Confirm demo booking':'डेमो बुकिङ पुष्टि','eSewa (demo)':'ईसेवा (डेमो)','Khalti (demo)':'खल्ती (डेमो)','Fonepay (demo)':'फोनपे (डेमो)','Cash on pickup (demo)':'सवारी चढ्दा नगद (डेमो)','WELCOME TO WAYFARE':'वेफेयरमा स्वागत छ','Choose your way in.':'आफ्नो भूमिका छान्नुहोस्।','Use a demo profile to explore each workspace.':'हरेक कार्यक्षेत्र हेर्न डेमो प्रोफाइल प्रयोग गर्नुहोस्।','Vehicle owner':'सवारी धनी','Admin':'प्रशासक','YOUR NAME':'तपाईंको नाम','Your name':'तपाईंको नाम','EMAIL':'इमेल','you@example.com':'you@example.com','This local demo does not verify passwords or create secure accounts. Demo IDs are generated and stored in this browser only.':'यो डेमोले पासवर्ड जाँच वा सुरक्षित खाता बनाउँदैन। डेमो आईडी यही ब्राउजरमा मात्र सुरक्षित हुन्छ।','Continue to Wayfare':'वेफेयरमा जानुहोस्','Signed in as passenger.':'यात्रुका रूपमा लगइन भयो।','Signed in as owner.':'चालकका रूपमा लगइन भयो।','Signed in as admin.':'प्रशासकका रूपमा लगइन भयो।','No card details are collected and no real payment is processed.':'कार्ड विवरण लिइँदैन र वास्तविक भुक्तानी हुँदैन।','Seat confirmed. Your demo receipt is in My trips.':'सिट पुष्टि भयो। डेमो रसिद मेरा यात्रामा छ।','Your route is posted.':'तपाईंको मार्ग पोस्ट भयो।','Route updated.':'मार्ग अद्यावधिक भयो।','Booking cancelled in this demo.':'डेमो बुकिङ रद्द भयो।','Account status updated.':'खाता स्थिति अद्यावधिक भयो।','Ride record updated.':'यात्रा विवरण अद्यावधिक भयो।','Demo data export downloaded.':'डेमो डाटा डाउनलोड भयो।','Select a ride to see its route':'मार्ग हेर्न यात्रा छान्नुहोस्','Your location is on':'तपाईंको स्थान साझा हुँदैछ','Your location':'तपाईंको स्थान','Shared on this device only · GPS':'यो उपकरणमा मात्र साझा · GPS','Share location is not available in this browser.':'यो ब्राउजरमा स्थान उपलब्ध छैन।','Location is not available in this browser.':'यो ब्राउजरमा स्थान उपलब्ध छैन।','Stop sharing location':'स्थान साझा गर्न रोक्नुहोस्','Location sharing stopped.':'स्थान साझेदारी रोकियो।','Location permission was not granted.':'स्थान अनुमति दिइएन।','Could not get your location.':'तपाईंको स्थान पाउन सकिएन।','This account cannot make bookings.':'यो खाताबाट बुकिङ गर्न मिल्दैन।','This account is suspended.':'यो खाता निलम्बित छ।','Enter a valid base trip share.':'मान्य आधार भाडा लेख्नुहोस्।','Export data':'डाटा निर्यात','Good morning,':'शुभ प्रभात,','Good afternoon,':'शुभ दिउँसो,','Good evening,':'शुभ साँझ,','Change language':'भाषा परिवर्तन','Find your next ride':'अर्को यात्रा खोज्नुहोस्','Good trips, shared.':'साझा यात्रा, राम्रो यात्रा।'
+        }
+      };
+      Object.assign(translations.ne, {
+        rides: 'यात्राहरू', posted: 'पोस्ट गरियो', 'active now': 'सक्रिय', 'Weekly': 'साप्ताहिक', 'Weekdays': 'कार्यदिन', 'One-time': 'एकपटक',
+        'YOUR NEPALISAFARI': 'तपाईंको नेपालीसफारी', 'NepaliSafari - Explore Nepal together': 'नेपाली सफारी - सँगै नेपाल घुमौँ',
+        'NepaliSafari member': 'नेपालीसफारी सदस्य', 'NepaliSafari wallet': 'नेपालीसफारी वालेट',
+        'Your trips, your terms': 'तपाईंको यात्रा, तपाईंको निर्णय', 'Explore Nepal together.': 'सँगै नेपाल घुमौँ।',
+        'Continue to NepaliSafari': 'नेपालीसफारीमा अघि बढ्नुहोस्',
+        'Across your NepaliSafari trips': 'तपाईंका नेपालीसफारी यात्राहरूमा',
+        'Not verified': 'प्रमाणित छैन', 'Reviewed (session demo)': 'समीक्षा गरिएको (डेमो सत्र)', 'Incomplete profile': 'अपूर्ण प्रोफाइल', 'Ready for admin review': 'प्रशासकीय समीक्षाका लागि तयार', 'Review ID': 'पहिचान समीक्षा', 'Undo review': 'समीक्षा हटाउनुहोस्',
+        'route preview': 'मार्ग पूर्वावलोकन', seat: 'सिट', seats: 'सिट',
+        'Publish this route': 'यो मार्ग पोस्ट गर्नुहोस्', 'Switch account': 'खाता बदल्नुहोस्', 'Map showing available shared rides': 'उपलब्ध साझा यात्राको नक्सा',
+        'Publish this route': 'यो मार्ग पोस्ट गर्नुहोस्', 'route preview': 'मार्ग पूर्वावलोकन',
+        'Ready to find your next ride?': 'अर्को यात्राका लागि तयार हुनुहुन्छ?', 'Your route. Your rules.': 'तपाईंको मार्ग, तपाईंको निर्णय।', 'The platform at a glance.': 'प्लेटफर्मको छोटो अवलोकन।',
+        'Kathmandu': 'काठमाडौं', 'Pokhara': 'पोखरा', 'Bharatpur': 'भरतपुर', 'Lalitpur': 'ललितपुर', 'Bhaktapur': 'भक्तपुर',
+        'Butwal': 'बुटवल', 'Biratnagar': 'विराटनगर', 'Dharan': 'धरान', 'Hetauda': 'हेटौंडा', 'Janakpur': 'जनकपुर',
+        'Nepalgunj': 'नेपालगञ्ज', 'active': 'सक्रिय', 'confirmed': 'पुष्टि भयो', 'cancelled': 'रद्द भयो', 'paused': 'रोकिएको', 'suspended': 'निलम्बित',
+        left: 'बाँकी', to: 'देखि', 'Demo checkout only. No card details are collected and no real payment is processed.': 'डेमो भुक्तानी मात्र। कार्ड विवरण लिइँदैन र वास्तविक भुक्तानी हुँदैन।',
+        'Owner payout shown here:': 'चालकले पाउने रकम:', 'Publish this route': 'यो मार्ग पोस्ट गर्नुहोस्', 'Switch account': 'खाता बदल्नुहोस्',
+        'DIRECT WALLET PAYMENT': 'सिधै वालेटमा भुक्तानी', 'Full fare. No commission.': 'पूरा भाडा। कुनै कमिसन छैन।', 'You receive': 'तपाईंले पाउने',
+        'Your wallet balance': 'तपाईंको वालेट मौज्दात', 'Fare': 'भाडा', 'Owner receives after boarding': 'बोर्डिङपछि चालकले पाउने',
+        'ROUTE DISTANCE (KM)': 'मार्ग दूरी (कि.मी.)', 'ESTIMATED FARE PER PASSENGER (NPR)': 'प्रति यात्रु अनुमानित भाडा (ने.रु.)',
+        'Enter an approximate road distance.': 'सडकको अनुमानित दूरी लेख्नुहोस्।',
+        'Enter a valid route distance to calculate a fair fare.': 'निष्पक्ष भाडा गणना गर्न मार्गको सही दूरी लेख्नुहोस्।',
+        'Approximate road distance based on known city locations; edit it for your actual route.': 'चिनिएका सहरका स्थानका आधारमा सडक दूरी अनुमान गरिएको छ; वास्तविक मार्गअनुसार सच्याउनुहोस्।',
+        'For unlisted places, enter the approximate road distance in km.': 'सूचीमा नभएका स्थानका लागि सडकको अनुमानित दूरी किलोमिटरमा लेख्नुहोस्।',
+        'Estimated trip cost will be split fairly between the driver and passenger seats.': 'अनुमानित यात्राखर्च चालक र यात्रुका सिटहरूबीच निष्पक्ष रूपमा बाँडिन्छ।',
+        'Est. trip cost:': 'अनुमानित यात्राखर्च:',
+        'Includes estimated fuel and vehicle running costs at NPR 25/km. Split equally between the driver and passenger seats.': 'ने.रु. २५/कि.मी. अनुमानित इन्धन तथा गाडी सञ्चालन खर्च समावेश छ। चालक र यात्रुका सिटहरूबीच समान रूपमा बाँडिन्छ।',
+        'Create a demo profile.': 'डेमो प्रोफाइल बनाउनुहोस्।', 'Use your phone number as your demo account ID.': 'आफ्नो फोन नम्बरलाई डेमो खाता ID बनाउनुहोस्।',
+        'YOUR NAME': 'तपाईंको नाम', 'PHONE NUMBER · ACCOUNT ID': 'फोन नम्बर · खाता ID', 'EMAIL (OPTIONAL)': 'इमेल (वैकल्पिक)',
+        'PROFILE PHOTO (PREVIEW ONLY)': 'प्रोफाइल फोटो (पूर्वावलोकन मात्र)', 'No photo': 'फोटो छैन',
+        'VEHICLE OWNER SAFETY DETAILS': 'सवारी धनीको सुरक्षा विवरण', 'VEHICLE NUMBER PLATE': 'सवारी नम्बर प्लेट',
+        'DRIVING LICENSE NUMBER': 'सवारी चालक अनुमतिपत्र नम्बर', 'Demo plate only (e.g. BA 00 PA 0000)': 'डेमो प्लेट मात्र (जस्तै BA 00 PA 0000)',
+        'Demo license number only': 'डेमो अनुमतिपत्र नम्बर मात्र',
+        'Never enter a real license number here. This demo shows test values to the admin only during this page session; details are not verified or saved.': 'यहाँ वास्तविक अनुमतिपत्र नम्बर नलेख्नुहोस्। यो डेमोमा परीक्षण विवरण यो पृष्ठ खुला रहँदासम्म प्रशासकलाई मात्र देखिन्छ; विवरण जाँच वा सुरक्षित गरिँदैन।',
+        'Demo only: there is no password, phone verification, secure login, or company verification. Your phone number is saved in this browser. Photo and owner safety details are kept in memory only and are removed when the page reloads. Do not upload real identity documents or enter real license details.': 'डेमो मात्र: पासवर्ड, फोन प्रमाणीकरण, सुरक्षित लगइन वा कम्पनी प्रमाणीकरण छैन। फोन नम्बर यस ब्राउजरमा सुरक्षित हुन्छ। फोटो र सवारी धनीको सुरक्षा विवरण पृष्ठ खुला रहँदासम्म स्मृतिमा मात्र रहन्छ र पृष्ठ फेरि खोल्दा हट्छ। वास्तविक परिचयपत्र नअपलोड गर्नुहोस् वा अनुमतिपत्र विवरण नलेख्नुहोस्।',
+        'That phone number is already linked to another demo role.': 'यो फोन नम्बर अर्को डेमो भूमिकासँग जोडिएको छ।',
+        'Enter a valid phone number for your demo account.': 'डेमो खाताका लागि मान्य फोन नम्बर लेख्नुहोस्।',
+        'Choose a JPG, PNG, or WebP profile photo under 5 MB.': '५ MB भन्दा सानो JPG, PNG वा WebP प्रोफाइल फोटो छान्नुहोस्।',
+        'Wait for the profile photo preview to finish.': 'प्रोफाइल फोटोको पूर्वावलोकन तयार हुन पर्खनुहोस्।',
+        'Could not read that profile photo. Please try another image.': 'फोटो पढ्न सकिएन। अर्को तस्बिर प्रयास गर्नुहोस्।',
+        'Owner safety details are session-only and unverified in this demo': 'सवारी धनीका सुरक्षा विवरण डेमोमा हालको सत्रसम्म मात्र र अप्रमाणित हुन्छन्',
+        'Owner safety details': 'सवारी धनीका सुरक्षा विवरण', 'Phone': 'फोन', 'Plate:': 'प्लेट:', 'License:': 'अनुमतिपत्र:',
+        'Not provided': 'दिइएको छैन', 'Not verified · demo only': 'जाँच नभएको · डेमो मात्र',
+        'Not required': 'आवश्यक छैन', 'Profile photo preview (session only)': 'प्रोफाइल फोटो पूर्वावलोकन (हालको सत्र मात्र)',
+        'No profile photo preview': 'प्रोफाइल फोटो पूर्वावलोकन छैन',
+        'OUR STORY': 'हाम्रो कथा', 'About NepaliSafari.': 'नेपालीसफारीबारे।',
+          'About us': 'हाम्रोबारे',
+        'A simpler way to share the road and discover Nepal together.': 'सँगै नेपाल घुम्न र यात्रा साझा गर्ने सरल तरिका।',
+        'MADE FOR THE JOURNEY': 'यात्राका लागि बनाइएको',
+        'Connecting people, one shared ride at a time.': 'हरेक साझा यात्रासँग मानिसहरूलाई जोड्दै।',
+        'NepaliSafari is a ride-sharing platform concept built to help passengers find seats on journeys that vehicle owners are already making. We bring routes, clear per-seat prices, and trip details together so people can plan a more convenient journey across Nepal.': 'नेपालीसफारी यात्रुहरूलाई सवारी धनीले पहिले नै गर्न लागेको यात्रामा सिट खोज्न सहयोग गर्ने साझा-यात्रा प्लेटफर्मको अवधारणा हो। नेपालभर सजिलो यात्रा योजना बनाउन मार्ग, प्रति-सिट स्पष्ट भाडा र यात्राको विवरण एकै ठाउँमा उपलब्ध गराउँछौँ।',
+        'How NepaliSafari works': 'नेपालीसफारी कसरी काम गर्छ',
+        'From finding a route to completing a trip': 'मार्ग खोज्नेदेखि यात्रा पूरा गर्नेसम्म',
+        'Find a journey': 'यात्रा खोज्नुहोस्',
+        'Passengers enter their departure, destination, and travel date to browse available shared rides and compare the route, seats, and fare.': 'यात्रुहरूले प्रस्थान स्थान, गन्तव्य र यात्रा मिति राखेर उपलब्ध साझा यात्रा, मार्ग, सिट र भाडा हेर्न सक्छन्।',
+        'Owners offer seats': 'सवारी धनीले सिट प्रस्ताव गर्छन्',
+        'Vehicle owners post their route, departure time, open seats, vehicle information, and an estimated fare based on distance and shared travel costs.': 'सवारी धनीले आफ्नो मार्ग, प्रस्थान समय, खाली सिट, सवारी विवरण र दूरी तथा साझा यात्राखर्चमा आधारित अनुमानित भाडा पोस्ट गर्छन्।',
+        'Request a seat': 'सिट अनुरोध गर्नुहोस्',
+        'SAFETY AND TRANSPARENCY': 'सुरक्षा र पारदर्शिता',
+        'Clear details. Safer journeys.': 'स्पष्ट विवरण। सुरक्षित यात्रा।',
+        'Trip listings show the route, departure, available seats, vehicle, and per-passenger fare. Owner profile forms include example vehicle and driving-license details for an admin review workflow.': 'यात्रा सूचीमा मार्ग, प्रस्थान, उपलब्ध सिट, सवारी र प्रति यात्रु भाडा देखिन्छ। सवारी धनीको प्रोफाइलमा प्रशासकीय समीक्षाको नमुना प्रक्रियाका लागि सवारी र चालक अनुमतिपत्र विवरण राखिन्छ।',
+        'Important:': 'महत्त्वपूर्ण:',
+        'NepaliSafari is currently a browser-only demo. Phone numbers are not verified, and owner documents are not securely stored or checked. Do not submit real identity or license details. Complaints are stored only in this browser and are not sent to company staff. Real verification, secure document handling, and payment processing would need to be implemented before a live launch.': 'नेपालीसफारी अहिले ब्राउजरमा चल्ने डेमो मात्र हो। फोन नम्बर प्रमाणित हुँदैनन् र सवारी धनीका कागजात सुरक्षित रूपमा भण्डारण वा जाँच गरिँदैनन्। वास्तविक परिचय वा अनुमतिपत्र विवरण नपठाउनुहोस्। उजुरी यस ब्राउजरमा मात्र सुरक्षित हुन्छ र कम्पनी कर्मचारीलाई पठाइँदैन। वास्तविक सेवा सुरु गर्नुअघि प्रमाणीकरण, सुरक्षित कागजात व्यवस्थापन र भुक्तानी प्रक्रिया लागू गर्नुपर्नेछ।',
+        'My complaints': 'मेरा उजुरीहरू', 'Reports submitted about a booked ride': 'बुक गरिएको यात्राबारे पठाइएका उजुरी',
+        'Passenger complaints': 'यात्रुका उजुरीहरू', 'Demo reports submitted about booked rides': 'बुक गरिएका यात्राबारे पठाइएका डेमो उजुरी',
+        'Report issue': 'समस्या रिपोर्ट गर्नुहोस्', 'Report submitted': 'उजुरी पठाइयो', 'Submit complaint': 'उजुरी पठाउनुहोस्',
+        'Report a problem with this ride': 'यो यात्रासम्बन्धी समस्या रिपोर्ट गर्नुहोस्',
+        'Your report will be linked to this booking and visible to the company admin.': 'तपाईंको उजुरी यो बुकिङसँग जोडिनेछ र कम्पनी प्रशासकले हेर्न सक्नेछन्।',
+        'Issue type': 'समस्याको प्रकार', 'Choose an issue': 'समस्या छान्नुहोस्',
+        'Unsafe driving': 'असुरक्षित सवारी चलाइ', 'Driver behavior': 'चालकको व्यवहार',
+        'Vehicle or plate mismatch': 'सवारी वा नम्बर प्लेट नमिलेको', 'Fare or payment issue': 'भाडा वा भुक्तानी समस्या',
+        'Route or pickup issue': 'मार्ग वा चढ्ने स्थानको समस्या', 'Other trip issue': 'यात्रासम्बन्धी अन्य समस्या',
+        'Describe what happened': 'के भयो वर्णन गर्नुहोस्', 'Keep your report factual. Do not include passwords or sensitive personal information.': 'आफ्नो उजुरीमा तथ्य मात्र लेख्नुहोस्। पासवर्ड वा संवेदनशील व्यक्तिगत विवरण नलेख्नुहोस्।',
+        'This is a demo complaint form. Reports are saved in this browser and are not sent to company staff or emergency services. For immediate danger, contact local emergency services.': 'यो डेमो उजुरी फाराम हो। उजुरी यस ब्राउजरमा सुरक्षित हुन्छ र कम्पनी कर्मचारी वा आपत्कालीन सेवामा पठाइँदैन। तत्काल खतरा भए स्थानीय आपत्कालीन सेवामा सम्पर्क गर्नुहोस्।',
+        'Complaint submitted for admin review (demo only).': 'प्रशासकीय समीक्षाका लागि उजुरी पठाइयो (डेमो मात्र)।',
+        'open': 'खुला', 'reviewed': 'समीक्षा भयो', 'resolved': 'समाधान भयो',
+        'Mark reviewed': 'समीक्षा भएको चिन्ह लगाउनुहोस्', 'Mark resolved': 'समाधान भएको चिन्ह लगाउनुहोस्',
+        'Reopen': 'फेरि खोल्नुहोस्', 'Complaint': 'उजुरी', 'Passenger': 'यात्रु',
+        'Vehicle owner': 'सवारी धनी', 'Details': 'विवरण', 'Submitted': 'पठाइएको मिति',
+        'Issue': 'समस्या', 'No complaints submitted.': 'कुनै उजुरी पठाइएको छैन।',
+        'No complaints to review.': 'समीक्षा गर्न कुनै उजुरी छैन।',
+        'My ratings': 'मेरा मूल्याङ्कनहरू', 'Reviews you\'ve left for vehicle owners': 'सवारी धनीका लागि तपाईंले दिएका समीक्षा',
+        'Passenger ratings': 'यात्रुका मूल्याङ्कन', 'Reviews are linked to completed bookings': 'समीक्षा पूरा भएका बुकिङसँग जोडिएका छन्',
+        'Rate vehicle owner': 'सवारी धनीलाई मूल्याङ्कन गर्नुहोस्', 'Rate this vehicle owner': 'यो सवारी धनीलाई मूल्याङ्कन गर्नुहोस्',
+        'Your rating': 'तपाईंको मूल्याङ्कन', 'Choose a rating': 'मूल्याङ्कन छान्नुहोस्',
+        '1 star': '१ तारा', '2 stars': '२ तारा', '3 stars': '३ तारा', '4 stars': '४ तारा', '5 stars': '५ तारा',
+        'Write a comment (optional)': 'टिप्पणी लेख्नुहोस् (वैकल्पिक)', 'Submit rating': 'मूल्याङ्कन पठाउनुहोस्',
+        'Only passengers with a completed booking can rate this vehicle owner. One review is allowed per booking.': 'पूरा बुकिङ गरेका यात्रुले मात्र सवारी धनीलाई मूल्याङ्कन गर्न सक्छन्। प्रत्येक बुकिङमा एउटा समीक्षा मात्र दिन पाइन्छ।',
+        'Thank you for rating this vehicle owner.': 'सवारी धनीलाई मूल्याङ्कन गर्नुभएकोमा धन्यवाद।',
+        'No ratings yet': 'अहिलेसम्म मूल्याङ्कन छैन', 'No ratings submitted.': 'कुनै मूल्याङ्कन पठाइएको छैन।',
+        'Rating': 'मूल्याङ्कन', 'Comment': 'टिप्पणी', 'Rated': 'मूल्याङ्कन मिति',
+        'Vehicle owner rating': 'सवारी धनीको मूल्याङ्कन', 'No comment provided': 'टिप्पणी दिइएको छैन',
+        'Keep comments respectful and about your trip experience.': 'टिप्पणी सम्मानजनक र आफ्नो यात्राको अनुभवबारे मात्र राख्नुहोस्।',
+        'Only completed bookings can be rated, once per booking.': 'पूरा भएका बुकिङलाई मात्र प्रत्येक बुकिङमा एकपटक मूल्याङ्कन गर्न सकिन्छ।',
+        'Choose a rating from 1 to 5 stars.': '१ देखि ५ तारासम्मको मूल्याङ्कन छान्नुहोस्।',
+        'Booking terms & passenger safety': 'बुकिङका सर्त र यात्रु सुरक्षा',
+        'I agree to the booking terms and passenger safety policy.': 'म बुकिङका सर्त र यात्रु सुरक्षा नीतिमा सहमत छु।',
+        'Read terms': 'सर्तहरू पढ्नुहोस्', 'Request seat': 'सिट अनुरोध गर्नुहोस्',
+        'Back to booking': 'बुकिङमा फर्कनुहोस्',
+        'Invite friends': 'साथीहरूलाई निम्तो दिनुहोस्',
+        'Invite friends. Earn rewards.': 'साथीलाई निम्तो दिनुहोस्। पुरस्कार कमाउनुहोस्।',
+        'When a friend joins with your invite and completes their first trip, you earn 10 points.': 'तपाईंको निम्तोबाट साथी जोडिएर पहिलो यात्रा पूरा गरेपछि तपाईंले १० अंक पाउनुहुन्छ।',
+        'YOUR REFERRAL REWARD': 'तपाईंको निम्तो पुरस्कार',
+        'points': 'अंक',
+        'Earn 10 points (NPR 10 value) for each new passenger who joins with your invite and completes one paid/boarded trip.': 'तपाईंको निम्तोबाट जोडिएको प्रत्येक नयाँ यात्रुले भुक्तानी पुष्टि गरी एउटा यात्रा पूरा गरेपछि १० अंक (रु. १० बराबर) पाउनुहोस्।',
+        'Bring a travel friend along.': 'यात्राका साथीलाई पनि निम्तो दिनुहोस्।',
+        'Share your link. Your friend can enter your code when creating a new passenger account.': 'आफ्नो लिङ्क साझा गर्नुहोस्। साथीले नयाँ यात्रु खाता बनाउँदा तपाईंको कोड राख्न सक्छन्।',
+        'Shareable invite link': 'साझा गर्न मिल्ने निम्तो लिङ्क',
+        'Invite link (local demo)': 'निम्तो लिङ्क (स्थानीय डेमो)',
+        'Copy link': 'लिङ्क प्रतिलिपि गर्नुहोस्',
+        'Copy code': 'कोड प्रतिलिपि गर्नुहोस्',
+        'Your invite code': 'तपाईंको निम्तो कोड',
+        'This file-based demo link works only on this computer. To test an invite, share the code and create a new passenger demo account in this browser. Points are demo-only and are not redeemable; a live program needs account verification, cross-device referral tracking, fraud controls, and a rewards backend.': 'यो फाइलमा आधारित डेमो लिङ्क यही कम्प्युटरमा मात्र खुल्छ। निम्तो परीक्षण गर्न कोड साझा गरी यही ब्राउजरमा नयाँ यात्रु डेमो खाता बनाउनुहोस्। अंक डेमोका लागि मात्र हुन् र साट्न मिल्दैन; वास्तविक सेवाका लागि खाता प्रमाणीकरण, विभिन्न उपकरणमा निम्तो ट्र्याकिङ, दुरुपयोग नियन्त्रण र पुरस्कार प्रणाली चाहिन्छ।',
+        'Your invites': 'तपाईंका निम्तोहरू',
+        'One reward per newly invited passenger': 'निम्तो गरिएको प्रत्येक नयाँ यात्रुका लागि एक पुरस्कार',
+        'Invited passenger': 'निम्तो गरिएको यात्रु',
+        'Trip completed': 'यात्रा पूरा भयो',
+        'Waiting for first trip': 'पहिलो यात्राको प्रतीक्षामा',
+        'No invites yet. Share your link with a friend.': 'अहिलेसम्म निम्तो छैन। साथीलाई आफ्नो लिङ्क पठाउनुहोस्।',
+        'Invite link copied.': 'निम्तो लिङ्क प्रतिलिपि भयो।',
+        'Select and copy your invite link.': 'आफ्नो निम्तो लिङ्क छानेर प्रतिलिपि गर्नुहोस्।',
+        'Invite code copied.': 'निम्तो कोड प्रतिलिपि भयो।',
+        'Select and copy your invite code.': 'आफ्नो निम्तो कोड छानेर प्रतिलिपि गर्नुहोस्।',
+        'INVITE CODE (OPTIONAL)': 'निम्तो कोड (वैकल्पिक)',
+        'Enter a friend\'s code': 'साथीको कोड लेख्नुहोस्',
+        'New passenger accounts only. The inviter earns 10 points after your first completed trip.': 'नयाँ यात्रु खाताका लागि मात्र। तपाईंको पहिलो यात्रा पूरा भएपछि निम्तो पठाउनेले १० अंक पाउँछन्।',
+        'That invite code was not found. Check it and try again.': 'यो निम्तो कोड भेटिएन। जाँच गरेर फेरि प्रयास गर्नुहोस्।',
+        'Invite rewards are for new passenger accounts.': 'निम्तो पुरस्कार नयाँ यात्रु खाताका लागि मात्र हो।',
+        'Trip confirmed. Your inviter earned 10 referral points.': 'यात्रा पुष्टि भयो। तपाईंलाई निम्तो गर्नेले १० अंक कमाए।',
+        'The owner must accept your request before chat is enabled. Payment is due only after you board. Demo only; no real funds move.': 'च्याट खुल्नुअघि सवारी धनीले तपाईंको अनुरोध स्वीकार गर्नुपर्छ। गाडी चढेपछि मात्र भुक्तानी गर्नुहोस्। डेमो मात्र; वास्तविक रकम सर्दैन।',
+        'A booking starts as a request. Your seat is confirmed only when the vehicle owner accepts it.': 'बुकिङ सुरुमा अनुरोध हुन्छ। सवारी धनीले स्वीकार गरेपछि मात्र तपाईंको सिट पुष्टि हुन्छ।',
+        'Passengers review and accept the booking terms before sending a seat request. The vehicle owner can accept or decline it in My trips.': 'सिट अनुरोध पठाउनुअघि यात्रुले बुकिङका सर्तहरू हेरेर स्वीकार गर्छन्। सवारी धनीले मेरा यात्रामा अनुरोध स्वीकार वा अस्वीकार गर्न सक्छन्।',
+        'Chat and travel': 'च्याट र यात्रा',
+        'Once the owner accepts, passenger and owner can chat to coordinate. Payment is confirmed by the passenger only after boarding.': 'सवारी धनीले स्वीकार गरेपछि यात्रु र सवारी धनीले समन्वयका लागि च्याट गर्न सक्छन्। यात्रुले गाडी चढेपछि मात्र भुक्तानी पुष्टि गर्छन्।',
+        'You may cancel while the request is awaiting a response. If the owner declines, the seat is released.': 'जवाफ पर्खिरहेको अवस्थामा तपाईं बुकिङ रद्द गर्न सक्नुहुन्छ। सवारी धनीले अस्वीकार गरेमा सिट फेरि उपलब्ध हुन्छ।',
+        'Chat opens only after the owner accepts. Use it to coordinate trip details; do not share passwords, payment codes, or sensitive personal information.': 'सवारी धनीले स्वीकार गरेपछि मात्र च्याट खुल्छ। यात्राको विवरण मिलाउन प्रयोग गर्नुहोस्; पासवर्ड, भुक्तानी कोड वा संवेदनशील व्यक्तिगत जानकारी साझा नगर्नुहोस्।',
+        'Pay only after you have boarded and confirmed the trip. The displayed payment options and wallet are demo-only; no real payment is processed.': 'गाडी चढेर यात्रा पुष्टि गरेपछि मात्र भुक्तानी गर्नुहोस्। देखाइएका भुक्तानी विकल्प र वालेट डेमो मात्र हुन्; वास्तविक भुक्तानी हुँदैन।',
+        'Check the vehicle and driver details before travelling. This demo does not verify identity or provide emergency support; contact local emergency services if you are in danger.': 'यात्राअघि सवारी र चालकको विवरण जाँच गर्नुहोस्। यो डेमोले परिचय प्रमाणित गर्दैन वा आपत्कालीन सहायता दिँदैन; खतरा भए स्थानीय आपत्कालीन सेवामा सम्पर्क गर्नुहोस्।',
+        'These demo terms are informational and are not a substitute for legal advice or a real service agreement.': 'यी डेमो सर्तहरू जानकारीका लागि मात्र हुन्; कानुनी सल्लाह वा वास्तविक सेवा सम्झौताको विकल्प होइनन्।',
+        'Booking requests, terms acceptance, and chat are stored only in this browser in this demo.': 'यो डेमोमा बुकिङ अनुरोध, सर्त स्वीकृति र च्याट यस ब्राउजरमा मात्र सुरक्षित हुन्छन्।',
+        'BOOKING CHAT': 'बुकिङ च्याट', 'Demo chat is saved in this browser, not sent over the internet. Keep messages trip-related and do not send sensitive information.': 'डेमो च्याट यस ब्राउजरमा सुरक्षित हुन्छ, इन्टरनेटबाट पठाइँदैन। यात्रासम्बन्धी सन्देश मात्र लेख्नुहोस् र संवेदनशील जानकारी नपठाउनुहोस्।',
+        'No messages yet. Send a message to coordinate your trip.': 'अहिलेसम्म सन्देश छैन। यात्राको समन्वय गर्न सन्देश पठाउनुहोस्।',
+        'Write a trip-related message': 'यात्रासम्बन्धी सन्देश लेख्नुहोस्', 'Send': 'पठाउनुहोस्', 'You': 'तपाईं', 'Message': 'सन्देश', 'Chat': 'च्याट',
+        'Awaiting owner response': 'सवारी धनीको जवाफ पर्खँदै', 'Ride accepted': 'यात्रा स्वीकार गरियो',
+        'Declined by owner': 'सवारी धनीले अस्वीकार गर्नुभयो', 'Accept': 'स्वीकार', 'Decline': 'अस्वीकार',
+        'Booking request sent to the vehicle owner.': 'सवारी धनीलाई बुकिङ अनुरोध पठाइयो।',
+        'Please agree to the booking terms to continue.': 'अगाडि बढ्न बुकिङका सर्तहरूमा सहमत हुनुहोस्।',
+        'This ride is no longer available to book.': 'यो यात्रा बुक गर्न अब उपलब्ध छैन।',
+        'Ride request accepted. The passenger can now chat with you.': 'यात्रा अनुरोध स्वीकार गरियो। अब यात्रुसँग च्याट गर्न सक्नुहुन्छ।',
+        'Booking request declined and the seat released.': 'बुकिङ अनुरोध अस्वीकार गरियो र सिट फेरि उपलब्ध भयो।',
+        'Chat is available only to the passenger and owner after acceptance.': 'स्वीकृतिपछि यात्रु र सवारी धनीले मात्र च्याट गर्न सक्छन्।',
+        'Booking cancelled in this demo.': 'यो डेमोमा बुकिङ रद्द गरियो।',
+        'Good trips, shared.': 'साझा यात्रा, राम्रो यात्रा।',
+        'Your trips, your terms': 'तपाईंको यात्रा, तपाईंको निर्णय',
+        'Explore Nepal together.': 'सँगै नेपाल घुमौँ।',
+        'Your NepaliSafari wallet balance': 'तपाईंको नेपालीसफारी वालेट मौज्दात',
+        'After boarding, the passenger confirms payment and the full fare goes to your NepaliSafari wallet. Demo only; no real wallet transfer is processed.': 'बोर्डिङपछि यात्रुले भुक्तानी पुष्टि गर्छन् र पूरा भाडा तपाईंको नेपालीसफारी वालेटमा जान्छ। डेमो मात्र; वास्तविक वालेट स्थानान्तरण हुँदैन।',
+        'Continue to NepaliSafari': 'नेपालीसफारीमा अघि बढ्नुहोस्',
+        'Payment method after boarding': 'बोर्डिङपछि भुक्तानी विधि', 'Reserve seat': 'सिट सुरक्षित गर्नुहोस्',
+        'After boarding, confirm payment to send the full fare directly to the vehicle owner wallet. Demo only; no real funds move.': 'बोर्डिङपछि पुष्टि गर्दा पूरा भाडा सिधै सवारी धनीको वालेटमा जान्छ। डेमो मात्र; वास्तविक रकम सर्दैन।',
+        'Awaiting boarding': 'बोर्डिङ पर्खँदै', 'I am seated · pay owner': 'म गाडीमा बसिसकेँ · चालकलाई तिर्नुहोस्',
+        'Paid to owner': 'चालकलाई भुक्तानी भयो', 'Full fare sent directly to owner wallet.': 'पूरा भाडा सिधै चालकको वालेटमा पठाइयो।',
+        'Owner wallet transfers': 'चालकको वालेटमा पठाइएको', 'Direct transfers after boarding': 'बोर्डिङपछि सिधै पठाइयो',
+        'Confirm boarding and pay owner': 'बोर्डिङ पुष्टि गरी चालकलाई तिर्नुहोस्', 'Transfer recorded (demo)': 'स्थानान्तरण रेकर्ड भयो (डेमो)',
+        'Passengers reserve a seat and pay you directly after boarding. Exact location is never shown on public listings.': 'यात्रुले सिट सुरक्षित गरी बोर्डिङपछि तपाईंलाई सिधै भुक्तानी गर्छन्। ठ्याक्कै स्थान सार्वजनिक हुँदैन।',
+        'After boarding, the passenger confirms payment and the full fare goes to your Wayfare wallet. Demo only; no real wallet transfer is processed.': 'बोर्डिङपछि यात्रुले भुक्तानी पुष्टि गर्छन् र पूरा भाडा तपाईंको वेफेयर वालेटमा जान्छ। डेमो मात्र; वास्तविक वालेट स्थानान्तरण हुँदैन।',
+        'Seat reserved. Pay the owner after boarding from My trips.': 'सिट सुरक्षित भयो। बोर्डिङपछि मेरा यात्राबाट चालकलाई भुक्तानी गर्नुहोस्।'
+      });
+      Object.keys(translations.ne).filter((key) => /5% passenger fee|5% owner deduction|Passenger platform fee|Passenger pays \+5%|Your payout −5%/.test(key)).forEach((key) => delete translations.ne[key]);
+      const state = {
+        users: [], rides: [], bookings: [], complaints: [], ratings: [], chatMessages: [], referrals: [],
+        role: 'passenger',
+        language: localStorage.getItem('wayfare-language') || 'en',
+        userId: '', csrfToken: '', authenticated: false, persistQueue: Promise.resolve(),
+        filterFrom: '', filterTo: '', filterDate: '', location: null, watchId: null, map: null, mapReady: false, markers: [], routeLayer: null, selectedRide: null
+      };
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => [...document.querySelectorAll(selector)];
+      const reverseTranslations = Object.fromEntries(Object.entries(translations.ne).map(([english, nepali]) => [nepali, english]));
+      const t = (text) => state.language === 'ne' ? (translations.ne[text] || text) : text;
+      const localizeTree = (root = document.body) => {
+        const map = state.language === 'ne' ? translations.ne : reverseTranslations;
+        const placeNames = ['Kathmandu','Pokhara','Bharatpur','Lalitpur','Bhaktapur','Butwal','Biratnagar','Dharan','Hetauda','Janakpur','Nepalgunj'];
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          const original = node.nodeValue; const trimmed = original.trim();
+          if (!trimmed) continue;
+          const translated = map[trimmed] || (state.language === 'ne' ? trimmed.replace(new RegExp(`\\b(${placeNames.join('|')})\\b`, 'g'), (place) => translations.ne[place] || place) : trimmed);
+          if (translated !== trimmed) node.nodeValue = original.replace(trimmed, translated);
+        }
+        if (root.querySelectorAll) root.querySelectorAll('[placeholder], [aria-label]').forEach((element) => {
+          ['placeholder','aria-label'].forEach((attribute) => { const value=element.getAttribute(attribute); if (map[value]) element.setAttribute(attribute,map[value]); });
+        });
+      };
+      const applyLanguage = () => {
+        document.documentElement.lang = state.language;
+        document.title = t('NepaliSafari - Explore Nepal together');
+        $('#languageButton').textContent = state.language === 'ne' ? 'English' : 'नेपाली';
+        localizeTree();
+      };
+      const digits = (value) => String(value).replace(/[0-9]/g, (digit) => state.language === 'ne' ? '०१२३४५६७८९'[Number(digit)] : digit);
+      const formatNumber = (value) => digits(new Intl.NumberFormat('en-NP', { maximumFractionDigits: 2 }).format(Number(value)));
+      const money = (value) => `${state.language === 'ne' ? 'रु.' : 'NPR'} ${digits(new Intl.NumberFormat('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value)))}`;
+      const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+      const currentUser = () => state.users.find((user) => user.id === state.userId) || { id: '', name: 'Sign in', email: '', role: state.role, phone: '', active: false, vehicle: '' };
+      const storedUserRecords = () => state.users.map(({ password, passwordHash, profilePhotoData, licensePhotoData, vehiclePlate, licenseNumber, ...user }) => user);
+      const profileMissingDetails = (user) => {
+        const missing=[];
+        if (!user?.name?.trim()) missing.push('name');
+        if (!user?.phone || String(user.phone).replace(/[^\d]/g,'').length<7) missing.push('phone');
+        if (!user?.email?.trim()) missing.push('email');
+        if (!user?.profilePhotoAvailable && !user?.profilePhotoData) missing.push('profile photo');
+        if (user?.role==='owner') {
+          if (!user.vehicle?.trim()) missing.push('vehicle');
+          if (!user.vehiclePlate?.trim()) missing.push('vehicle number plate');
+          if (!user.licenseNumber?.trim()) missing.push('driving licence number');
+          if (!user.licensePhotoAvailable && !user.licensePhotoData) missing.push('driving licence photo');
+        }
+        return missing;
+      };
+      const profileReviewLabel = (user) => {
+        const missing=profileMissingDetails(user);
+        return user.idVerified && !missing.length ? 'Reviewed' : missing.length ? 'Incomplete profile' : 'Ready for admin review';
+      };
+      const refreshFromServer = async () => {
+        const response=await fetch('/api/data',{credentials:'same-origin'});
+        const body=await response.json();
+        if (!response.ok) throw new Error(body.error||'Could not load account data.');
+        state.csrfToken=body.csrfToken||state.csrfToken;
+        Object.assign(state,body.data);
+        const user=state.users.find((item)=>item.id===state.userId);
+        if (user) state.role=user.role;
+      };
+      const save = () => {
+        if (!state.authenticated) { toast('Sign in to save changes.'); return; }
+        state.persistQueue=state.persistQueue.then(async()=>{
+          const response=await fetch('/api/data',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':state.csrfToken},body:JSON.stringify({users:storedUserRecords(),rides:state.rides,bookings:state.bookings,complaints:state.complaints,ratings:state.ratings,chatMessages:state.chatMessages,referrals:state.referrals})});
+          const body=await response.json();
+          if (!response.ok) throw new Error(body.error||'Your changes could not be saved.');
+          await refreshFromServer();
+          renderRides();
+          if (activePage()==='offer') renderOwner();
+          if (activePage()==='trips') renderBookings();
+          if (activePage()==='admin') renderAdmin();
+        }).catch(async(error)=>{
+          toast(error.message||'Your changes could not be saved.');
+          try { await refreshFromServer(); renderRides(); renderOwner(); renderBookings(); if (state.role==='admin') renderAdmin(); } catch { toast('Could not restore the latest server data. Reload the page and try again.'); }
+        });
+        return state.persistQueue;
+      };
+      const initials = (name) => name.split(/\s+/).map((part) => part[0]).slice(0,2).join('').toUpperCase();
+      const displayDate = (date) => {
+        const day = new Date(date + 'T12:00:00');
+        if (state.language === 'ne') return `${['आइत','सोम','मंगल','बुध','बिही','शुक्र','शनि'][day.getDay()]}, ${['जनवरी','फेब्रुअरी','मार्च','अप्रिल','मे','जुन','जुलाई','अगस्ट','सेप्टेम्बर','अक्टोबर','नोभेम्बर','डिसेम्बर'][day.getMonth()]} ${formatNumber(day.getDate())}`;
+        return day.toLocaleDateString('en-NP', { weekday: 'short', month: 'short', day: 'numeric' });
+      };
+      const shortTime = (time) => {
+        const [hour,minute] = time.split(':').map(Number);
+        if (state.language === 'ne') return `${digits(String(hour % 12 || 12))}:${digits(String(minute).padStart(2,'0'))} ${hour < 12 ? 'बिहान' : hour < 18 ? 'दिउँसो' : 'साँझ'}`;
+        return new Date(2000,0,1,hour,minute).toLocaleTimeString('en-NP', {hour:'numeric',minute:'2-digit'});
+      };
+      const ownerFor = (ride) => state.users.find((user) => user.id === ride.owner) || { name: t('NepaliSafari member'), id: ride.owner };
+      const ratingsForOwner = (ownerId) => state.ratings.filter((rating) => rating.owner === ownerId && Number.isInteger(rating.stars) && rating.stars>=1 && rating.stars<=5);
+      const ratingStars = (rating) => {
+        const stars=Number.isInteger(rating.stars) && rating.stars>=1 && rating.stars<=5 ? rating.stars : 0;
+        return `${'★'.repeat(stars)}${'☆'.repeat(5-stars)}`;
+      };
+      const ownerRatingSummary = (ownerId) => {
+        const ratings=ratingsForOwner(ownerId);
+        return ratings.length
+          ? `${(ratings.reduce((sum,rating)=>sum+rating.stars,0)/ratings.length).toFixed(1)} ★ · ${formatNumber(ratings.length)}`
+          : t('No ratings yet');
+      };
+      const referralCodeFor = (user) => {
+        if (!user.referralCode) {
+          let code;
+          do { code='NS'+Math.random().toString(36).slice(2,8).toUpperCase(); }
+          while (state.users.some((item)=>item!==user && item.referralCode===code));
+          user.referralCode=code;
+          save();
+        }
+        return user.referralCode;
+      };
+      const renderInvite = () => {
+        const user=currentUser();
+        const code=referralCodeFor(user);
+        const url=new URL(location.href);
+        url.searchParams.set('ref',code);
+        $('#invitePoints').textContent=formatNumber(Number(user.referralPoints)||0);
+        $('#inviteRupees').textContent=money(Number(user.referralPoints)||0);
+        $('#inviteLink').value=url.href;
+        $('#inviteCode').textContent=code;
+        const referrals=state.referrals.filter((item)=>item.inviterId===user.id).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+        $('#inviteRows').innerHTML=referrals.length ? referrals.map((referral)=>{
+          const invitee=state.users.find((item)=>item.id===referral.inviteeId);
+          const completed=referral.status==='rewarded';
+          return `<tr><td>${safe(invitee?.name||t('Invited passenger'))}</td><td>${new Date(referral.createdAt).toLocaleDateString(state.language==='ne'?'ne-NP':'en-NP')}</td><td><span class="status-pill ${completed?'':'pending'}">${t(completed?'Trip completed':'Waiting for first trip')}</span></td><td>${completed?`${formatNumber(referral.rewardPoints)} ${t('points')} · ${money(referral.rewardPoints)}`:'—'}</td></tr>`;
+        }).join('') : `<tr><td colspan="4">${t('No invites yet. Share your link with a friend.')}</td></tr>`;
+        $('#copyInvite').onclick=async()=>{
+          const input=$('#inviteLink');
+          try {
+            if (!navigator.clipboard) throw new Error('Clipboard permission is unavailable.');
+            await navigator.clipboard.writeText(input.value);
+            toast('Invite link copied.');
+          } catch {
+            input.focus(); input.select();
+            toast('Select and copy your invite link.');
+          }
+        };
+        $('#copyInviteCode').onclick=async()=>{
+          try {
+            if (!navigator.clipboard) throw new Error('Clipboard permission is unavailable.');
+            await navigator.clipboard.writeText(code);
+            toast('Invite code copied.');
+          } catch {
+            const selection=window.getSelection();
+            const range=document.createRange();
+            range.selectNodeContents($('#inviteCode'));
+            selection.removeAllRanges();
+            selection.addRange(range);
+            toast('Select and copy your invite code.');
+          }
+        };
+        localizeTree($('#invitePage'));
+      };
+      const repeatLabel = (ride) => t(ride.repeat === 'weekly' ? 'Weekly' : ride.repeat === 'weekdays' ? 'Weekdays' : 'One-time');
+      const paymentLabel = (method) => method ? t(method) : t('Unavailable');
+      const runsOn = (ride, date) => {
+        if (!date) return true;
+        if (!ride.repeat || ride.repeat === 'once') return ride.date === date;
+        const requested = new Date(date + 'T12:00:00'); const starts = new Date(ride.date + 'T12:00:00');
+        if (requested < starts) return false;
+        return ride.repeat === 'weekdays' ? requested.getDay() > 0 && requested.getDay() < 6 : requested.getDay() === starts.getDay();
+      };
+      const toast = (message) => { const el = $('#toast'); el.textContent = t(message); el.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove('show'), 2700); };
+      const modal = (content) => { $('#modal').innerHTML = content; $('#modalBackdrop').classList.add('open'); $('#modal').querySelector('.close-button')?.addEventListener('click', closeModal); localizeTree($('#modal')); };
+      const closeModal = () => $('#modalBackdrop').classList.remove('open');
+      const statusClass = (status) => status === 'active' || status === 'paid_to_owner' || status === 'accepted' ? '' : ['awaiting_boarding','awaiting_owner'].includes(status) ? 'pending' : status;
+      const bookingStatusLabel = (status) => t(({ awaiting_owner:'Awaiting owner response', accepted:'Ride accepted', awaiting_boarding:'Trip completion pending', completed:'Trip completed', paid_to_owner:'Paid to owner', declined:'Declined by owner', cancelled:'Cancelled' })[status] || status);
+      const chatEnabled = (booking) => ['accepted','awaiting_boarding','completed','paid_to_owner'].includes(booking.status);
+
+      const navConfig = () => state.role === 'owner' ? [
+        ['offer','Offer a ride','<path d="M12 5v14M5 12h14"/>'], ['explore','Find rides','<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'], ['trips','My trips','<path d="M4 6h16M6 6v14h12V6M9 10h6M9 14h6"/>'], ['invite','Invite friends','<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8M20 8v6m3-3h-6"/>'], ['about','About us','<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>']
+      ] : state.role === 'admin' ? [
+        ['admin','Overview','<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/>'], ['explore','Ride listings','<path d="M4 6h16M4 12h16M4 18h16"/>'], ['about','About us','<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>']
+      ] : [
+        ['explore','Find a ride','<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'], ['trips','My trips','<path d="M4 6h16M6 6v14h12V6M9 10h6M9 14h6"/>'], ['offer','Offer a ride','<path d="M12 5v14M5 12h14"/>'], ['invite','Invite friends','<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8M20 8v6m3-3h-6"/>'], ['about','About us','<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>']
+      ];
+      const icon = (path) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+      const renderNavigation = () => {
+        const items = navConfig();
+        const current = activePage();
+        $('#desktopNav').innerHTML = items.map(([id,label,path]) => `<button class="nav-item ${current===id?'active':''}" data-page="${id}">${icon(path)}<span>${t(label)}</span></button>`).join('');
+        $('#mobileNav').innerHTML = items.map(([id,label,path]) => `<button class="${current===id?'active':''}" data-page="${id}">${icon(path)}<span>${t(label)}</span></button>`).join('');
+        $$('[data-page]').forEach((button) => button.addEventListener('click', () => showPage(button.dataset.page)));
+      };
+      const activePage = () => { const id=$$('.page-section.visible')[0]?.id; return id==='ownerPage'?'offer':id==='tripsPage'?'trips':id==='invitePage'?'invite':id==='adminPage'?'admin':id==='aboutPage'?'about':'explore'; };
+      const showPage = (page) => {
+        if (!state.authenticated && ['offer','trips','invite','admin'].includes(page)) { openAuth('login'); return; }
+        if (page === 'offer' && state.role === 'passenger') { openAuth('owner'); return; }
+        if (page === 'admin' && state.role !== 'admin') { openAuth('admin'); return; }
+        const id = page === 'offer' ? 'ownerPage' : page === 'trips' ? 'tripsPage' : page === 'invite' ? 'invitePage' : page === 'admin' ? 'adminPage' : page === 'about' ? 'aboutPage' : 'explorePage';
+        $$('.page-section').forEach((section) => section.classList.toggle('visible', section.id === id));
+        renderNavigation();
+        if (page === 'explore') renderRides();
+        if (page === 'offer') renderOwner();
+        if (page === 'trips') renderBookings();
+        if (page === 'invite') renderInvite();
+        if (page === 'admin') renderAdmin();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      const renderHeader = () => {
+        const user = currentUser();
+        const avatar = $('#headerAvatar');
+        avatar.textContent = initials(user.name);
+        if (user.profilePhotoData) {
+          const image = document.createElement('img');
+          image.src = user.profilePhotoData;
+          image.alt = `${user.name} profile`;
+          avatar.replaceChildren(image);
+        }
+        $('#headerName').textContent = user.name;
+        $('#headerId').textContent = user.phone || user.id;
+        $('#welcomeName').innerHTML = `Good ${new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'},<br>${safe(user.name.split(' ')[0])}.`;
+        $('#welcomeSub').textContent = state.role === 'owner' ? 'Your route. Your rules.' : state.role === 'admin' ? 'The platform at a glance.' : 'Ready to find your next ride?';
+        $('#welcomeEyebrow').textContent = state.role === 'admin' ? 'ADMIN WORKSPACE' : state.role === 'owner' ? 'DRIVER WORKSPACE' : 'YOUR NEPALISAFARI';
+        $('#pageTitle').textContent = state.role === 'owner' ? 'Find a shared ride.' : 'Find your people.';
+        $('#pageSubtitle').textContent = state.role === 'owner' ? 'Need a lift on your days off? Browse the road ahead.' : 'Share the ride. Split the cost. Keep moving.';
+        $('#headAction').querySelector('span:last-child').textContent = state.role === 'owner' ? 'Post a route' : 'Offer a ride';
+        localizeTree();
+      };
+
+      const startMap = () => {
+        if (!window.L || state.mapReady) return;
+        try {
+          state.map = L.map('map', { zoomControl: false, scrollWheelZoom: false, attributionControl: true }).setView([28.1,84.6], 7);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(state.map);
+          state.mapReady = true;
+          renderMap();
+        } catch { $('#mapFallback').style.display = 'block'; }
+      };
+      const renderMap = () => {
+        if (!state.mapReady) return;
+        state.markers.forEach((marker) => marker.remove()); state.markers = [];
+        if (state.routeLayer) { state.routeLayer.remove(); state.routeLayer = null; }
+        const source = state.rides.filter((ride) => ride.status === 'active' && ride.seats > 0 && (!state.filterFrom || ride.from.toLowerCase().includes(state.filterFrom.toLowerCase())) && (!state.filterTo || ride.to.toLowerCase().includes(state.filterTo.toLowerCase())) && runsOn(ride,state.filterDate));
+        source.forEach((ride) => {
+          const point = ride.a || [27.7172,85.3240];
+          const marker = L.marker(point, { icon: L.divIcon({ className: 'custom-pin', iconSize: [22,22], iconAnchor: [10,20] }) }).addTo(state.map);
+          marker.bindPopup(`<strong>${safe(ride.from)}</strong><br>${safe(ride.to)} · ${money(ride.fare)} ${t('Fare')}`);
+          marker.on('click', () => selectRide(ride.id, false)); state.markers.push(marker);
+        });
+        if (state.location) {
+          const userMarker = L.circleMarker([state.location.lat,state.location.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#e77a5f', fillOpacity: 1 }).addTo(state.map).bindPopup('Your shared location (this device)');
+          state.markers.push(userMarker);
+        }
+        if (state.selectedRide) {
+          const ride = state.rides.find((item) => item.id === state.selectedRide);
+          if (ride?.a && ride?.b) {
+            state.routeLayer = L.polyline([ride.a,ride.b], { color: '#285847', weight: 4, opacity: .8, dashArray: '8 7' }).addTo(state.map);
+            state.map.fitBounds(state.routeLayer.getBounds().pad(.22), { maxZoom: 9, animate: true });
+          }
+        } else if (state.location) state.map.setView([state.location.lat,state.location.lng], 10);
+      };
+      const knownPlaceCoords = { kathmandu:[27.7172,85.3240], pokhara:[28.2096,83.9856], bharatpur:[27.5291,84.3542], chitwan:[27.5291,84.3542], lalitpur:[27.6588,85.3247], bhaktapur:[27.6710,85.4298], butwal:[27.7006,83.4484], biratnagar:[26.4525,87.2718], dharan:[26.8065,87.2846], hetauda:[27.4287,85.0322], janakpur:[26.7288,85.9263], nepalgunj:[28.0500,81.6167] };
+      const coordsFor = (place) => {
+        const key = place.toLowerCase().split(',')[0].trim();
+        return knownPlaceCoords[key] || [27.7172 + (Math.random()-.5)*.3, 85.3240 + (Math.random()-.5)*.3];
+      };
+      const COST_PER_KM_NPR = 25;
+      const estimateRoadDistanceKm = (from, to) => {
+        const start = knownPlaceCoords[from.toLowerCase().split(',')[0].trim()];
+        const end = knownPlaceCoords[to.toLowerCase().split(',')[0].trim()];
+        if (!start || !end) return null;
+        const radians = (degrees) => degrees * Math.PI / 180;
+        const latitudeDelta = radians(end[0] - start[0]);
+        const longitudeDelta = radians(end[1] - start[1]);
+        const haversine = Math.sin(latitudeDelta/2) ** 2 + Math.cos(radians(start[0])) * Math.cos(radians(end[0])) * Math.sin(longitudeDelta/2) ** 2;
+        const straightLineKm = 6371 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+        return Math.max(1, Math.round(straightLineKm * 1.35));
+      };
+      const updateFareEstimate = () => {
+        const distanceKm = Number($('#routeDistance').value);
+        const passengerSeats = Number($('#routeSeats').value);
+        const validDistance = Number.isFinite(distanceKm) && distanceKm > 0;
+        const tripCost = validDistance ? distanceKm * COST_PER_KM_NPR : 0;
+        const fare = validDistance && passengerSeats > 0 ? Math.max(10, Math.round((tripCost / (passengerSeats + 1)) / 10) * 10) : 0;
+        $('#routeFare').value = fare || '';
+        $('#routeCostSummary').textContent = validDistance
+          ? `${t('Est. trip cost:')} ${money(tripCost)} · ${t('Includes estimated fuel and vehicle running costs at NPR 25/km. Split equally between the driver and passenger seats.')}`
+          : t('Estimated trip cost will be split fairly between the driver and passenger seats.');
+      };
+      const suggestRouteDistance = () => {
+        const estimate = estimateRoadDistanceKm($('#routeFrom').value.trim(), $('#routeTo').value.trim());
+        $('#routeDistance').value = estimate || '';
+        $('#routeDistanceNote').textContent = estimate
+          ? t('Approximate road distance based on known city locations; edit it for your actual route.')
+          : t('For unlisted places, enter the approximate road distance in km.');
+        updateFareEstimate();
+      };
+      const renderRides = () => {
+        const from = state.filterFrom.trim().toLowerCase(); const to = state.filterTo.trim().toLowerCase();
+        const rides = state.rides.filter((ride) => ride.status === 'active' && ride.seats > 0 && (!from || ride.from.toLowerCase().includes(from)) && (!to || ride.to.toLowerCase().includes(to)) && runsOn(ride,state.filterDate)).sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+        $('#rideCount').textContent = `${formatNumber(rides.length)} ${t('rides')}`;
+        $('#rideCards').innerHTML = rides.length ? rides.map((ride) => {
+          const owner = ownerFor(ride);
+          const verified=owner.idVerified===true;
+          return `<article class="ride-card ${state.selectedRide===ride.id?'selected':''}" data-select="${safe(ride.id)}"><div class="ride-meta"><span>${displayDate(ride.date)} · ${shortTime(ride.time)} · ${repeatLabel(ride)}</span><span class="${verified?'verified':'form-hint'}">${verified?'✓ '+t('Reviewed'):t('Not verified')}</span></div><div class="ride-route"><div class="route-dots"><i></i><i></i></div><div><div class="route-city"><span>${t(safe(ride.from))}</span><small>${shortTime(ride.time)}</small></div><div class="route-city"><span>${t(safe(ride.to))}</span><small>${formatNumber(ride.seats)} ${t(ride.seats===1?'seat':'seats')} ${t('left')}</small></div></div><div class="fare">${money(ride.fare)}<small>${ride.distanceKm ? `${formatNumber(ride.distanceKm)} km · ` : ''}${t('per passenger')}</small></div></div><div class="ride-footer"><div class="driver-info"><span class="driver-avatar">${initials(owner.name)}</span><span>${safe(owner.name)}<small>${safe(ride.vehicle)}</small><small class="owner-rating">${ownerRatingSummary(owner.id)}</small></span></div><button class="card-action" data-book="${safe(ride.id)}">${t('Request seat')}</button></div>${ratingsForOwner(owner.id).slice(-2).reverse().map((rating)=>`<div class="owner-review"><strong>${ratingStars(rating)}</strong>${rating.comment?`<span>${safe(rating.comment)}</span>`:''}</div>`).join('')}</article>`;
+        }).join('') : `<div class="empty">${t('No rides match those places yet. Try a nearby city or post the route you need.')}</div>`;
+        $$('[data-select]').forEach((card) => card.addEventListener('click', (event) => { if (!event.target.closest('[data-book]')) selectRide(card.dataset.select); }));
+        $$('[data-book]').forEach((button) => button.addEventListener('click', (event) => { event.stopPropagation(); openBooking(button.dataset.book); }));
+        if ($('#mapLegendText')) $('#mapLegendText').textContent = t(state.location ? 'Your location is on' : 'Rides leaving soon');
+        renderMap();
+        localizeTree($('#rideCards'));
+      };
+      const selectRide = (id, render = true) => {
+        state.selectedRide = state.selectedRide === id ? null : id;
+        const ride = state.rides.find((item) => item.id === id);
+        $('#mapStatusTitle').textContent = ride ? `${ride.from} to ${ride.to}` : t('Pacific Northwest');
+        $('#mapStatusText').textContent = ride ? `${displayDate(ride.date)} · ${shortTime(ride.time)} · ${t('route preview')}` : t('Select a ride to see its route');
+        if (render) renderRides(); else renderMap();
+      };
+      const openBookingTerms = (returnRideId = null) => {
+        modal(`<div class="modal-head"><div><div class="eyebrow">NEPALISAFARI BOOKING</div><h2 id="modalTitle">${t('Booking terms & passenger safety')}</h2></div><button class="close-button" aria-label="Close">×</button></div><ul class="policy-list"><li>${t('A booking starts as a request. Your seat is confirmed only when the vehicle owner accepts it.')}</li><li>${t('You may cancel while the request is awaiting a response. If the owner declines, the seat is released.')}</li><li>${t('Chat opens only after the owner accepts. Use it to coordinate trip details; do not share passwords, payment codes, or sensitive personal information.')}</li><li>${t('Online payments are unavailable until eSewa or Khalti merchant credentials are configured. Agree on payment directly before travelling.')}</li><li>${t('Check the vehicle and driver details before travelling. Contact local emergency services if you are in danger.')}</li><li>${t('These terms are informational and are not a substitute for legal advice or a service agreement.')}</li></ul><div class="demo-banner">${t('Your booking requests, messages, complaints, and ratings are stored on the NepaliSafari server on this computer.')}</div>${returnRideId?`<button class="secondary" id="returnToBooking" type="button">${t('Back to booking')}</button>`:''}`);
+        if (returnRideId) {
+          const returnToBooking=()=>openBooking(returnRideId);
+          $('#modal .close-button').addEventListener('click',returnToBooking);
+          $('#returnToBooking').addEventListener('click',returnToBooking);
+        }
+      };
+      const openChat = (bookingId) => {
+        const booking=state.bookings.find((item)=>item.id===bookingId);
+        const ride=booking && state.rides.find((item)=>item.id===booking.rideId);
+        const user=currentUser();
+        const isPassenger=booking && booking.passenger===user.id && state.role==='passenger';
+        const isOwner=ride && ride.owner===user.id && state.role==='owner';
+        if (!booking || !ride || !chatEnabled(booking) || (!isPassenger && !isOwner)) {
+          toast('Chat is available only to the passenger and owner after acceptance.');
+          return;
+        }
+        const messages=state.chatMessages.filter((message)=>message.bookingId===booking.id);
+        const other= isPassenger ? ownerFor(ride) : state.users.find((item)=>item.id===booking.passenger) || {name:'Passenger'};
+        modal(`<div class="modal-head"><div><div class="eyebrow">${t('BOOKING CHAT')}</div><h2 id="modalTitle">${safe(other.name)}</h2><p>${t(safe(ride.from))} ${t('to')} ${t(safe(ride.to))} · ${displayDate(ride.date)}</p></div><button class="close-button" aria-label="Close">×</button></div><div class="demo-banner">${t('Keep messages trip-related. Do not send passwords, payment codes, or sensitive personal information.')}</div><div class="chat-thread" id="chatThread">${messages.length ? messages.map((message)=>`<div class="chat-message ${message.sender===user.id?'mine':''}">${safe(message.text)}<small>${message.sender===user.id?t('You'):safe(other.name)} · ${new Date(message.createdAt).toLocaleString(state.language==='ne'?'ne-NP':'en-NP')}</small></div>`).join('') : `<div class="form-hint">${t('No messages yet. Send a message to coordinate your trip.')}</div>`}</div><form class="chat-compose" id="chatForm"><input id="chatInput" maxlength="1000" autocomplete="off" aria-label="${t('Message')}" placeholder="${t('Write a trip-related message')}" required><button class="primary" type="submit">${t('Send')}</button></form>`);
+        const thread=$('#chatThread');
+        thread.scrollTop=thread.scrollHeight;
+        $('#chatForm').addEventListener('submit',(event)=>{
+          event.preventDefault();
+          const fresh=state.bookings.find((item)=>item.id===booking.id);
+          const freshRide=fresh && state.rides.find((item)=>item.id===fresh.rideId);
+          const participant=fresh && freshRide && ((state.role==='passenger' && fresh.passenger===user.id) || (state.role==='owner' && freshRide.owner===user.id));
+          if (!fresh || !freshRide || !chatEnabled(fresh) || currentUser().id!==user.id || !participant) { closeModal(); toast('Chat is available only to the passenger and owner after acceptance.'); return; }
+          const text=$('#chatInput').value.trim();
+          if (!text) return;
+          state.chatMessages.push({id:'NS-M-'+Math.random().toString(36).slice(2,8).toUpperCase(),bookingId:booking.id,sender:user.id,text,createdAt:new Date().toISOString()});
+          save();
+          openChat(booking.id);
+        });
+      };
+      const openBooking = (id) => {
+        const ride = state.rides.find((item) => item.id === id); if (!ride) return;
+        if (!state.authenticated) { openAuth('login'); return; }
+        if (state.role !== 'passenger') { openAuth('passenger'); return; }
+        if (!ride.seats || ride.status!=='active' || ride.owner===currentUser().id) { toast('This ride is no longer available to book.'); return; }
+        const fare = ride.fare;
+        modal(`<div class="modal-head"><div><div class="eyebrow">ONE SEAT, ONE GOOD TRIP</div><h2 id="modalTitle">Confirm your seat.</h2><p>${t(safe(ride.from))} ${t('to')} ${t(safe(ride.to))} · ${displayDate(ride.date)}</p></div><button class="close-button" aria-label="Close">×</button></div><form class="modal-form" id="bookingForm"><div class="field"><label>DRIVER AND VEHICLE</label><div class="demo-banner">${safe(ownerFor(ride).name)} · ${safe(ride.vehicle)} · ${formatNumber(ride.seats)} ${t(ride.seats===1?'seat':'seats')} ${t('left')}</div></div><div class="modal-price"><div><span>${t('Fare per passenger')}</span><b>${money(fare)}</b></div></div><div class="demo-banner">${t('The owner must accept your request before chat is enabled. Online payment is unavailable until the site owner configures eSewa or Khalti. Confirm fare arrangements directly before travel.')}</div><label class="booking-terms"><input id="bookingTerms" type="checkbox" required><span>${t('I agree to the booking terms and passenger safety policy.')} <button type="button" id="showBookingTerms">${t('Read terms')}</button></span></label><button class="primary" type="submit">${t('Request seat')} · ${money(fare)}</button></form>`);
+        $('#showBookingTerms').addEventListener('click',(event)=>{ event.preventDefault(); openBookingTerms(ride.id); });
+        $('#bookingForm').addEventListener('submit', (event) => {
+          event.preventDefault();
+          const user = currentUser();
+          if (!user || !user.active) { closeModal(); toast('This account cannot make bookings.'); return; }
+          if (!$('#bookingTerms').checked) { toast('Please agree to the booking terms to continue.'); return; }
+          if (ride.status!=='active' || ride.seats<1) { closeModal(); toast('This ride is no longer available to book.'); renderRides(); return; }
+          ride.seats -= 1;
+          const booking = { id: 'NS-B-' + Math.random().toString(36).slice(2,8).toUpperCase(), rideId: ride.id, passenger: user.id, amount: fare, payout: fare, paymentMethod: '', status: 'awaiting_owner', termsAccepted: true, termsVersion: '2026-10-06', termsAcceptedAt: new Date().toISOString(), createdAt: new Date().toISOString() };
+          state.bookings.push(booking); save(); closeModal(); renderRides(); toast('Booking request sent to the vehicle owner.');
+        });
+      };
+
+      const renderOwner = () => {
+        const user = currentUser();
+        $('#routeVehicle').value = user.vehicle || $('#routeVehicle').value || '';
+        const own = state.rides.filter((ride) => ride.owner === user.id);
+        $('#ownerRouteCount').textContent = `${formatNumber(own.length)} ${t('posted')}`;
+        $('#ownerRows').innerHTML = own.length ? own.map((ride) => `<tr><td><strong>${t(safe(ride.from))} → ${t(safe(ride.to))}</strong></td><td>${displayDate(ride.date)} · ${shortTime(ride.time)}<br><span style="color:var(--muted)">${repeatLabel(ride)}</span></td><td>${formatNumber(ride.seats)}</td><td>${money(ride.fare)}</td><td><span class="status-pill ${statusClass(ride.status)}">${t(safe(ride.status))}</span></td><td><button class="table-action" data-toggle-ride="${safe(ride.id)}">${t(ride.status==='active'?'Pause':'Restore')}</button></td></tr>`).join('') : `<tr><td colspan="6">${t('No routes yet. Add your first trip above.')}</td></tr>`;
+        $$('[data-toggle-ride]').forEach((button) => button.addEventListener('click', () => { const ride = state.rides.find((item) => item.id === button.dataset.toggleRide); ride.status = ride.status === 'active' ? 'paused' : 'active'; save(); renderOwner(); toast('Route updated.'); }));
+        updateFareEstimate();
+        localizeTree($('#ownerPage'));
+      };
+      const renderBookings = () => {
+        const user = currentUser();
+        const rows = state.role === 'owner' ? state.bookings.filter((booking) => state.rides.find((ride) => ride.id === booking.rideId)?.owner === user.id) : state.bookings.filter((booking) => booking.passenger === user.id);
+        const total = state.role === 'owner' ? Number(user.walletBalance) || 0 : rows.filter((booking)=>booking.status==='completed').length;
+        $('#passengerStats').innerHTML = `<div class="stat-card"><span>${t(state.role==='owner'?'Seats booked':'Confirmed rides')}</span><strong>${formatNumber(rows.length)}</strong><em>${t('Across your NepaliSafari trips')}</em></div><div class="stat-card"><span>${t(state.role==='owner'?'Your NepaliSafari wallet balance':'Trips completed')}</span><strong>${state.role==='owner'?money(total):formatNumber(total)}</strong><em>${t(state.role==='owner'?'Payments unavailable until gateway setup':'Both traveller and owner confirm completion')}</em></div>`;
+        $('#bookingRows').innerHTML = rows.length ? rows.map((booking) => {
+          const ride = state.rides.find((item) => item.id === booking.rideId); if (!ride) return '';
+          const counterpart = state.role==='owner' ? state.users.find((item)=>item.id===booking.passenger) : ownerFor(ride);
+          const action = state.role==='owner' && booking.status==='awaiting_owner' ? `<button class="table-action" data-accept-booking="${safe(booking.id)}">${t('Accept')}</button> <button class="table-action" data-decline-booking="${safe(booking.id)}">${t('Decline')}</button>` : ['accepted','awaiting_boarding'].includes(booking.status) && (booking.passenger===user.id || ride.owner===user.id) ? `<button class="table-action" data-complete-trip="${safe(booking.id)}">${t('Confirm trip completed')}</button>` : booking.status==='awaiting_owner' ? t('Awaiting owner response') : booking.status==='accepted' ? t('Ride accepted') : booking.status==='awaiting_boarding' ? t('Trip completion pending') : booking.status==='completed' ? t('Trip completed') : booking.status==='paid_to_owner' ? t('Paid to owner') : booking.status==='declined' ? t('Declined by owner') : '';
+          const chatAction=chatEnabled(booking) ? `<button class="table-action" data-chat="${safe(booking.id)}">${t('Chat')}</button>` : '';
+          const complaint = state.complaints.find((item)=>item.bookingId===booking.id && item.passenger===user.id);
+          const complaintAction = state.role==='passenger' && booking.status!=='cancelled'
+            ? complaint ? `<span class="status-pill ${statusClass(complaint.status)}">${t(complaint.status)}</span>` : `<button class="table-action" data-complain="${safe(booking.id)}">${t('Report issue')}</button>`
+            : '';
+          const rating=state.ratings.find((item)=>item.bookingId===booking.id && item.passenger===user.id);
+          const ratingAction=state.role==='passenger' && booking.status==='completed'
+            ? rating ? `<span class="rating-stars">${ratingStars(rating)}</span>` : `<button class="table-action" data-rate="${safe(booking.id)}">${t('Rate vehicle owner')}</button>`
+            : '';
+          return `<tr><td><strong>${t(safe(ride.from))} → ${t(safe(ride.to))}</strong></td><td>${displayDate(ride.date)} · ${shortTime(ride.time)}</td><td>${safe(counterpart?.name||'Member')}</td><td>${money(booking.amount)}</td><td><span class="status-pill ${statusClass(booking.status)}">${bookingStatusLabel(booking.status)}</span></td><td>${action}${state.role==='passenger'&&['awaiting_owner','accepted','awaiting_boarding'].includes(booking.status)?` <button class="table-action" data-cancel-booking="${safe(booking.id)}">${t('Cancel')}</button>`:''} ${chatAction} ${complaintAction} ${ratingAction}</td></tr>`;
+        }).join('') : `<tr><td colspan="6">${t('No trips yet. Your next shared ride starts here.')}</td></tr>`;
+        const passengerComplaints = state.complaints.filter((complaint)=>complaint.passenger===user.id);
+        $('#myComplaintRows').innerHTML = passengerComplaints.length ? passengerComplaints.map((complaint)=>{
+          const ride=state.rides.find((item)=>item.id===complaint.rideId);
+          const owner=ride ? ownerFor(ride) : {name:'Removed ride'};
+          return `<tr><td><strong>${safe(complaint.id)}</strong></td><td>${ride?`${t(safe(ride.from))} → ${t(safe(ride.to))}`:t('Removed ride')}</td><td>${safe(owner.name)}</td><td>${t(safe(complaint.category))}</td><td>${new Date(complaint.createdAt).toLocaleDateString(state.language==='ne'?'ne-NP':'en-NP')}</td><td><span class="status-pill ${statusClass(complaint.status)}">${t(complaint.status)}</span></td></tr>`;
+        }).join('') : `<tr><td colspan="6">${t('No complaints submitted.')}</td></tr>`;
+        const myRatings=state.ratings.filter((rating)=>rating.passenger===user.id);
+        $('#myRatingRows').innerHTML=myRatings.length ? myRatings.map((rating)=>{
+          const ride=state.rides.find((item)=>item.id===rating.rideId);
+          const owner=ride?ownerFor(ride):{name:t('Removed ride')};
+          return `<tr><td>${ride?`${t(safe(ride.from))} → ${t(safe(ride.to))}`:t('Removed ride')}</td><td>${safe(owner.name)}</td><td><span class="rating-stars">${ratingStars(rating)}</span></td><td>${safe(rating.comment||t('No comment provided'))}</td><td>${new Date(rating.createdAt).toLocaleDateString(state.language==='ne'?'ne-NP':'en-NP')}</td></tr>`;
+        }).join('') : `<tr><td colspan="5">${t('No ratings submitted.')}</td></tr>`;
+        $$('[data-complain]').forEach((button)=>button.addEventListener('click',()=>openComplaint(button.dataset.complain)));
+        $$('[data-rate]').forEach((button)=>button.addEventListener('click',()=>openRating(button.dataset.rate)));
+        $$('[data-chat]').forEach((button)=>button.addEventListener('click',()=>openChat(button.dataset.chat)));
+        $$('[data-accept-booking]').forEach((button)=>button.addEventListener('click',()=>{
+          const booking=state.bookings.find((item)=>item.id===button.dataset.acceptBooking);
+          const ride=booking && state.rides.find((item)=>item.id===booking.rideId);
+          if (!booking || !ride || ride.owner!==user.id || booking.status!=='awaiting_owner') return;
+          booking.status='accepted'; booking.acceptedAt=new Date().toISOString(); save(); renderBookings(); toast('Ride request accepted. The passenger can now chat with you.');
+        }));
+        $$('[data-decline-booking]').forEach((button)=>button.addEventListener('click',()=>{
+          const booking=state.bookings.find((item)=>item.id===button.dataset.declineBooking);
+          const ride=booking && state.rides.find((item)=>item.id===booking.rideId);
+          if (!booking || !ride || ride.owner!==user.id || booking.status!=='awaiting_owner') return;
+          booking.status='declined'; booking.declinedAt=new Date().toISOString(); ride.seats+=1; save(); renderBookings(); toast('Booking request declined and the seat released.');
+        }));
+        $$('[data-cancel-booking]').forEach((button) => button.addEventListener('click', () => {
+          const booking = state.bookings.find((item)=>item.id===button.dataset.cancelBooking); if (!booking) return;
+          if (!['awaiting_owner','accepted','awaiting_boarding'].includes(booking.status)) return;
+          booking.status = 'cancelled'; const ride = state.rides.find((item)=>item.id===booking.rideId); if (ride) ride.seats += 1; save(); renderBookings(); toast('Booking cancelled.');
+        }));
+        $$('[data-complete-trip]').forEach((button) => button.addEventListener('click', () => {
+          const booking=state.bookings.find((item)=>item.id===button.dataset.completeTrip);
+          const ride=booking&&state.rides.find((item)=>item.id===booking.rideId);
+          if (!booking||!ride||!['accepted','awaiting_boarding'].includes(booking.status)) return;
+          if (state.role==='passenger'&&booking.passenger===user.id) booking.passengerCompleted=true;
+          else if (state.role==='owner'&&ride.owner===user.id) booking.ownerCompleted=true;
+          else return;
+          booking.status='completed'; save(); renderBookings();
+          toast('Trip completion confirmation saved. Both travellers must confirm.');
+        }));
+        localizeTree($('#tripsPage'));
+      };
+      const openComplaint = (bookingId) => {
+        if (state.role !== 'passenger') return;
+        const user=currentUser();
+        const booking=state.bookings.find((item)=>item.id===bookingId && item.passenger===user.id);
+        const ride=booking && state.rides.find((item)=>item.id===booking.rideId);
+        if (!booking || !ride || booking.status==='cancelled' || state.complaints.some((item)=>item.bookingId===booking.id && item.passenger===user.id)) {
+          toast('This booking is not available for a new complaint.');
+          return;
+        }
+        modal(`<div class="modal-head"><div><div class="eyebrow">PASSENGER SUPPORT</div><h2 id="modalTitle">${t('Report a problem with this ride')}</h2><p>${t(safe(ride.from))} ${t('to')} ${t(safe(ride.to))} · ${displayDate(ride.date)}</p></div><button class="close-button" aria-label="Close">×</button></div><form class="modal-form" id="complaintForm"><div class="demo-banner">${t('Your report will be linked to this booking and visible to the company administrator. Reports do not replace emergency services. For immediate danger, contact local emergency services.')}</div><div class="auth-field"><label for="complaintCategory">${t('Issue type')}</label><select id="complaintCategory" required><option value="">${t('Choose an issue')}</option><option value="Unsafe driving">${t('Unsafe driving')}</option><option value="Driver behavior">${t('Driver behavior')}</option><option value="Vehicle or plate mismatch">${t('Vehicle or plate mismatch')}</option><option value="Fare or payment issue">${t('Fare or payment issue')}</option><option value="Route or pickup issue">${t('Route or pickup issue')}</option><option value="Other trip issue">${t('Other trip issue')}</option></select></div><div class="auth-field"><label for="complaintDetails">${t('Describe what happened')}</label><textarea id="complaintDetails" maxlength="1000" required></textarea><span class="form-hint">${t('Keep your report factual. Do not include passwords or sensitive personal information.')}</span></div><button class="primary" type="submit">${t('Submit complaint')}</button></form>`);
+        $('#complaintForm').addEventListener('submit',(event)=>{
+          event.preventDefault();
+          const details=$('#complaintDetails').value.trim();
+          if (!details) { toast('Describe what happened before submitting.'); return; }
+          state.complaints.push({
+            id:'NS-C-'+Math.random().toString(36).slice(2,8).toUpperCase(),
+            bookingId:booking.id,
+            rideId:ride.id,
+            passenger:user.id,
+            category:$('#complaintCategory').value,
+            details,
+            status:'open',
+            createdAt:new Date().toISOString()
+          });
+          save();
+          closeModal();
+          renderBookings();
+          toast('Complaint submitted for administrator review.');
+        });
+      };
+      const openRating = (bookingId) => {
+        if (state.role!=='passenger') return;
+        const user=currentUser();
+        const booking=state.bookings.find((item)=>item.id===bookingId && item.passenger===user.id && item.status==='completed');
+        const ride=booking && state.rides.find((item)=>item.id===booking.rideId);
+        if (!booking || !ride || ride.owner===user.id || state.ratings.some((item)=>item.bookingId===booking.id && item.passenger===user.id)) {
+          toast('Only completed bookings can be rated, once per booking.');
+          return;
+        }
+        modal(`<div class="modal-head"><div><div class="eyebrow">PASSENGER REVIEW</div><h2 id="modalTitle">${t('Rate this vehicle owner')}</h2><p>${safe(ownerFor(ride).name)} · ${t(safe(ride.from))} ${t('to')} ${t(safe(ride.to))}</p></div><button class="close-button" aria-label="Close">×</button></div><form class="modal-form" id="ratingForm"><div class="demo-banner">${t('Only passengers with a completed booking can rate this vehicle owner. One review is allowed per booking.')}</div><div class="auth-field"><label for="ratingStars">${t('Your rating')}</label><select id="ratingStars" required><option value="">${t('Choose a rating')}</option><option value="1">${t('1 star')}</option><option value="2">${t('2 stars')}</option><option value="3">${t('3 stars')}</option><option value="4">${t('4 stars')}</option><option value="5">${t('5 stars')}</option></select></div><div class="auth-field"><label for="ratingComment">${t('Write a comment (optional)')}</label><textarea id="ratingComment" maxlength="500"></textarea><span class="form-hint">${t('Keep comments respectful and about your trip experience.')}</span></div><button class="primary" type="submit">${t('Submit rating')}</button></form>`);
+        $('#ratingForm').addEventListener('submit',(event)=>{
+          event.preventDefault();
+          const stars=Number($('#ratingStars').value);
+          if (!Number.isInteger(stars) || stars<1 || stars>5) { toast('Choose a rating from 1 to 5 stars.'); return; }
+          const eligibleBooking=state.bookings.find((item)=>item.id===booking.id && item.passenger===currentUser().id && item.status==='completed');
+          if (state.role!=='passenger' || currentUser().id!==user.id || !eligibleBooking) { closeModal(); toast('Only completed bookings can be rated, once per booking.'); return; }
+          if (state.ratings.some((item)=>item.bookingId===booking.id && item.passenger===user.id)) { closeModal(); toast('This booking has already been rated.'); return; }
+          state.ratings.push({
+            id:'NS-R-'+Math.random().toString(36).slice(2,8).toUpperCase(),
+            bookingId:booking.id,
+            rideId:ride.id,
+            passenger:user.id,
+            owner:ride.owner,
+            stars,
+            comment:$('#ratingComment').value.trim(),
+            createdAt:new Date().toISOString()
+          });
+          save();
+          closeModal();
+          renderBookings();
+          toast('Thank you for rating this vehicle owner.');
+        });
+      };
+      const renderAdmin = () => {
+        const live = state.rides.filter((ride)=>ride.status==='active').length;
+        $('#adminStats').innerHTML = `<div class="stat-card"><span>Member accounts</span><strong>${formatNumber(state.users.length)}</strong><em>Across all roles</em></div><div class="stat-card"><span>Ride listings</span><strong>${formatNumber(state.rides.length)}</strong><em>${formatNumber(live)} ${t('active now')}</em></div><div class="stat-card"><span>Bookings</span><strong>${formatNumber(state.bookings.length)}</strong><em>Stored on this server</em></div><div class="stat-card"><span>Online payments</span><strong>Unavailable</strong><em>Gateway processing is not active</em></div>`;
+        $('#adminRideRows').innerHTML = state.rides.map((ride)=>`<tr><td><strong>${t(safe(ride.from))} → ${t(safe(ride.to))}</strong><br><span style="color:var(--muted)">${safe(ownerFor(ride).name)} · ${safe(ride.vehicle)}</span></td><td>${displayDate(ride.date)}<br><span style="color:var(--muted)">${repeatLabel(ride)}</span></td><td>${formatNumber(ride.seats)}</td><td>${money(ride.fare)}</td><td><span class="status-pill ${statusClass(ride.status)}">${t(safe(ride.status))}</span></td><td><button class="table-action" data-admin-ride="${safe(ride.id)}">${t(ride.status==='active'?'Suspend':'Restore')}</button></td></tr>`).join('') || `<tr><td colspan="6">${t('No rides listed.')}</td></tr>`;
+        $('#accountRows').innerHTML = state.users.map((user)=>{
+          const missing=profileMissingDetails(user);
+          const complete=missing.length===0;
+          const ownerDetails=user.role==='owner'?`Vehicle: ${safe(user.vehicle||'Not provided')}<br>Plate: ${safe(user.vehiclePlate||'Not provided')}<br>Licence: ${safe(user.licenseNumber||'Not provided')}<br>${user.licensePhotoAvailable?`<img class="account-photo" src="/api/users/${encodeURIComponent(user.id)}/image/license" alt="${safe(user.name)} driving licence photo"><br><span class="form-hint">Encrypted document preview</span>`:'No licence image provided'}`:'Not required';
+          return `<tr><td><strong>${safe(user.id)}</strong></td><td>${user.profilePhotoAvailable?`<img class="account-photo" src="/api/users/${encodeURIComponent(user.id)}/image/profile" alt="${safe(user.name)} profile photo"> `:''}${safe(user.name)}<br><span class="form-hint">${user.profilePhotoAvailable?'Encrypted profile photo':'No profile photo provided'}</span></td><td>${t(safe(user.role))}</td><td>${safe(user.email||'—')}</td><td>${safe(user.phone||'—')}</td><td>${ownerDetails}</td><td><span class="status-pill ${user.idVerified&&complete?'':'pending'}">${t(profileReviewLabel(user))}</span>${!complete?`<br><span class="form-hint">Missing: ${safe(missing.join(', '))}</span>`:''}</td><td><span class="status-pill ${user.active?'':'suspended'}">${t(user.active?'active':'suspended')}</span></td><td>${user.role==='admin'?'':`${user.idVerified&&complete?`<button class="table-action" data-user-review="${safe(user.id)}">Undo review</button>`:`<button class="table-action" data-user-review="${safe(user.id)}" ${complete?'':'disabled'}>Review ID</button>`}<button class="table-action" data-user-status="${safe(user.id)}">${t(user.active?'Suspend':'Restore')}</button>`}</td></tr>`;
+        }).join('');
+        $('#paymentRows').innerHTML = state.bookings.map((booking)=>{ const ride=state.rides.find((item)=>item.id===booking.rideId); const passenger=state.users.find((item)=>item.id===booking.passenger); return `<tr><td><strong>${safe(booking.id)}</strong></td><td>${safe(passenger?.name||'Member')}</td><td>${ride?`${t(safe(ride.from))} → ${t(safe(ride.to))}`:'Removed ride'}</td><td>${paymentLabel(booking.paymentMethod)}</td><td>${money(booking.amount)}</td><td>—</td><td><span class="status-pill ${statusClass(booking.status)}">${bookingStatusLabel(booking.status)}</span></td></tr>`; }).join('') || `<tr><td colspan="7">${t('No bookings yet.')}</td></tr>`;
+        $('#complaintRows').innerHTML = state.complaints.length ? [...state.complaints].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map((complaint)=>{
+          const passenger=state.users.find((item)=>item.id===complaint.passenger);
+          const ride=state.rides.find((item)=>item.id===complaint.rideId);
+          const action=complaint.status==='open'?'Mark reviewed':complaint.status==='reviewed'?'Mark resolved':'Reopen';
+          return `<tr><td><strong>${safe(complaint.id)}</strong><br><span class="form-hint">Booking ${safe(complaint.bookingId)}</span></td><td>${safe(passenger?.name||'Member')}</td><td>${ride?safe(ownerFor(ride).name):t('Removed ride')}</td><td>${ride?`${t(safe(ride.from))} → ${t(safe(ride.to))}`:t('Removed ride')}</td><td>${t(safe(complaint.category))}</td><td>${safe(complaint.details)}</td><td>${new Date(complaint.createdAt).toLocaleDateString(state.language==='ne'?'ne-NP':'en-NP')}</td><td><span class="status-pill ${statusClass(complaint.status)}">${t(complaint.status)}</span></td><td><button class="table-action" data-complaint-status="${safe(complaint.id)}">${t(action)}</button></td></tr>`;
+        }).join('') : `<tr><td colspan="9">${t('No complaints to review.')}</td></tr>`;
+        $('#ratingRows').innerHTML = state.ratings.length ? [...state.ratings].sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).map((rating)=>{
+          const passenger=state.users.find((item)=>item.id===rating.passenger);
+          const owner=state.users.find((item)=>item.id===rating.owner);
+          const ride=state.rides.find((item)=>item.id===rating.rideId);
+          return `<tr><td>${safe(passenger?.name||'Member')}</td><td>${safe(owner?.name||'Member')}</td><td>${ride?`${t(safe(ride.from))} → ${t(safe(ride.to))}`:t('Removed ride')}</td><td><span class="rating-stars">${ratingStars(rating)}</span></td><td>${safe(rating.comment||t('No comment provided'))}</td><td>${new Date(rating.createdAt).toLocaleDateString(state.language==='ne'?'ne-NP':'en-NP')}</td></tr>`;
+        }).join('') : `<tr><td colspan="6">${t('No ratings submitted.')}</td></tr>`;
+        $$('[data-admin-ride]').forEach((button)=>button.addEventListener('click',()=>{const ride=state.rides.find((item)=>item.id===button.dataset.adminRide);ride.status=ride.status==='active'?'suspended':'active';save();renderAdmin();toast('Ride record updated.');}));
+        $$('[data-user-review]').forEach((button)=>button.addEventListener('click',()=>{
+          const user=state.users.find((item)=>item.id===button.dataset.userReview);
+          if (!user) return;
+          if (profileMissingDetails(user).length) { toast('Complete all required profile details before ID review.'); return; }
+          user.idVerified=!user.idVerified;
+          save(); renderAdmin(); renderRides();
+          toast(user.idVerified?'Owner profile review saved.':'Owner profile review removed.');
+        }));
+        $$('[data-user-status]').forEach((button)=>button.addEventListener('click',()=>{const user=state.users.find((item)=>item.id===button.dataset.userStatus);user.active=!user.active;save();renderAdmin();toast('Account status updated.');}));
+        $$('[data-complaint-status]').forEach((button)=>button.addEventListener('click',()=>{
+          const complaint=state.complaints.find((item)=>item.id===button.dataset.complaintStatus);
+          if (!complaint) return;
+          complaint.status=complaint.status==='open'?'reviewed':complaint.status==='reviewed'?'resolved':'open';
+          save(); renderAdmin();
+        }));
+        localizeTree($('#adminPage'));
+      };
+
+      const openAuth = (preferred = state.role) => {
+        const incomingReferralCode=new URLSearchParams(location.search).get('ref')?.trim()||'';
+        const isLogin=['login','admin'].includes(preferred);
+        let chosen = preferred==='owner' ? 'owner' : 'passenger';
+        let profilePhotoData = '';
+        let licensePhotoData = '';
+        let pendingPhotoReads = 0;
+        modal(`<div class="modal-head"><div><div class="eyebrow">NEPALISAFARI ACCOUNT</div><h2 id="modalTitle">${isLogin?'Sign in to your account':'Create your account'}</h2><p>${isLogin?'Sign in with your email or phone and password.':'Your information and encrypted identity images are stored securely on this computer.'}</p></div><button class="close-button" aria-label="Close">×</button></div><form class="modal-form" id="authForm"><div id="loginFields"><div class="auth-field"><label for="authIdentity">EMAIL OR PHONE NUMBER</label><input id="authIdentity" autocomplete="username"></div></div><div class="auth-field"><label for="authPassword">PASSWORD</label><input id="authPassword" type="password" autocomplete="${isLogin?'current-password':'new-password'}" minlength="${isLogin?'1':'12'}" maxlength="256" required><span class="form-hint">${isLogin?'':'Use at least 12 characters.'}</span></div><div id="registerFields"><div class="role-choice"><button type="button" data-role-choice="passenger">Passenger</button><button type="button" data-role-choice="owner">Vehicle owner</button></div><div class="auth-field"><label for="authName">YOUR NAME</label><input id="authName" placeholder="Your name" autocomplete="name"></div><div class="auth-field"><label for="authPhone">PHONE NUMBER</label><input id="authPhone" type="tel" placeholder="+977 98XXXXXXXX" autocomplete="tel" inputmode="tel"></div><div class="auth-field"><label for="authInviteCode">INVITE CODE (OPTIONAL)</label><input id="authInviteCode" value="${safe(incomingReferralCode)}" placeholder="Enter a friend's code" autocomplete="off"></div><div class="auth-field"><label for="authEmail">EMAIL</label><input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email"></div><div class="auth-field"><label for="authPhoto">PROFILE PHOTO</label><div class="profile-photo-preview" id="authPhotoPreview" aria-live="polite">No photo</div><input id="authPhoto" type="file" accept="image/jpeg,image/png,image/webp"><span class="form-hint">JPG, PNG, or WebP; maximum 5 MB.</span></div><div class="auth-owner-fields modal-form" id="ownerSafetyFields" hidden><div class="eyebrow">VEHICLE OWNER DETAILS</div><div class="auth-field"><label for="authVehicle">VEHICLE MAKE / MODEL</label><input id="authVehicle" placeholder="e.g. Toyota Hiace" autocomplete="off"></div><div class="auth-field"><label for="authPlate">VEHICLE NUMBER PLATE</label><input id="authPlate" placeholder="BA 00 PA 0000" autocomplete="off"></div><div class="auth-field"><label for="authLicense">DRIVING LICENCE NUMBER</label><input id="authLicense" autocomplete="off"></div><div class="auth-field"><label for="authLicensePhoto">DRIVING LICENCE PHOTO</label><div class="license-photo-preview" id="authLicensePhotoPreview" aria-live="polite">No licence image selected</div><input id="authLicensePhoto" type="file" accept="image/jpeg,image/png,image/webp"><span class="form-hint">Images are encrypted on this server and visible only to you and administrators.</span></div></div><div class="demo-banner" id="paymentSetupNotice">Payments are unavailable until an eSewa or Khalti merchant account is configured.</div></div><button class="primary" type="submit">${isLogin?'Sign in':'Create account'}</button><button class="secondary" id="authModeToggle" type="button">${isLogin?'Create an account':'Already registered? Sign in'}</button></form>`);
+        const setChoice = (role) => {
+          chosen=role;
+          $$('.role-choice button').forEach((button)=>button.classList.toggle('chosen',button.dataset.roleChoice===chosen));
+          const ownerFields = $('#ownerSafetyFields');
+          ownerFields.hidden = chosen !== 'owner';
+          $('#authVehicle').required = chosen === 'owner';
+          $('#authPlate').required = chosen === 'owner';
+          $('#authLicense').required = chosen === 'owner';
+          $('#authLicensePhoto').required = chosen === 'owner';
+        };
+        $('#loginFields').hidden=!isLogin;
+        $('#registerFields').hidden=isLogin;
+        $('#authIdentity').required=isLogin;
+        $$('#registerFields input').forEach((input)=>{input.disabled=isLogin; input.required=!isLogin && ['authName','authPhone','authEmail','authPhoto'].includes(input.id);});
+        $('#authLicensePhoto').required=!isLogin && chosen==='owner';
+        if (!isLogin) setChoice(chosen);
+        else $$('#registerFields input').forEach((input)=>input.disabled=true);
+        $$('.role-choice button').forEach((button)=>button.addEventListener('click',()=>setChoice(button.dataset.roleChoice)));
+        $('#authModeToggle').addEventListener('click',()=>openAuth(isLogin?chosen:'login'));
+        $('#authPhoto').addEventListener('change', (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            event.target.value = '';
+            profilePhotoData = '';
+            $('#authPhotoPreview').textContent = 'No photo';
+            $('#authPhoto').required = true;
+            toast('Choose a JPG, PNG, or WebP profile photo under 5 MB.');
+            return;
+          }
+          pendingPhotoReads++;
+          const reader = new FileReader();
+          reader.addEventListener('load', () => {
+            profilePhotoData = String(reader.result || '');
+            const preview = $('#authPhotoPreview');
+            const image = document.createElement('img');
+            image.src = profilePhotoData;
+            image.alt = 'Selected profile photo preview';
+            preview.replaceChildren(image);
+            $('#authPhoto').required = false;
+            pendingPhotoReads--;
+          });
+          reader.addEventListener('error', () => {
+            pendingPhotoReads--;
+            event.target.value = '';
+            profilePhotoData = '';
+            $('#authPhotoPreview').textContent = 'No photo';
+            $('#authPhoto').required = true;
+            toast('Could not read that profile photo. Please try another image.');
+          });
+          reader.readAsDataURL(file);
+        });
+        $('#authLicensePhoto').addEventListener('change', (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            event.target.value = '';
+            licensePhotoData = '';
+            $('#authLicensePhotoPreview').textContent = 'No licence image selected';
+            $('#authLicensePhoto').required = chosen === 'owner';
+            toast('Choose a JPG, PNG, or WebP sample licence image under 5 MB.');
+            return;
+          }
+          pendingPhotoReads++;
+          const reader = new FileReader();
+          reader.addEventListener('load', () => {
+            licensePhotoData = String(reader.result || '');
+            const preview = $('#authLicensePhotoPreview');
+            const image = document.createElement('img');
+            image.src = licensePhotoData;
+            image.alt = 'Selected driving licence photo preview';
+            preview.replaceChildren(image);
+            $('#authLicensePhoto').required = false;
+            pendingPhotoReads--;
+          });
+          reader.addEventListener('error', () => {
+            pendingPhotoReads--;
+            event.target.value = '';
+            licensePhotoData = '';
+            $('#authLicensePhotoPreview').textContent = 'No licence image selected';
+            $('#authLicensePhoto').required = chosen === 'owner';
+            toast('Could not read that licence image. Please try another sample image.');
+          });
+          reader.readAsDataURL(file);
+        });
+        $('#authForm').addEventListener('submit',(event)=>{
+          event.preventDefault();
+          if (pendingPhotoReads) { toast('Wait for the photo previews to finish.'); return; }
+          const password=$('#authPassword').value;
+          const payload=isLogin ? {identity:$('#authIdentity').value.trim(),password} : {
+            name:$('#authName').value.trim(),
+            email:$('#authEmail').value.trim().toLowerCase(),
+            phone:$('#authPhone').value.trim(),
+            password,
+            role:chosen,
+            inviteCode:$('#authInviteCode').value.trim().toUpperCase(),
+            vehicle:$('#authVehicle').value.trim(),
+            vehiclePlate:$('#authPlate').value.trim(),
+            licenseNumber:$('#authLicense').value.trim(),
+            profilePhotoData,
+            licensePhotoData
+          };
+          if (!isLogin && (!profilePhotoData || chosen==='owner' && !licensePhotoData)) { toast('Upload the required profile and licence photos.'); return; }
+          fetch(isLogin?'/api/login':'/api/register',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+            .then(async(response)=>{const result=await response.json();if(!response.ok)throw new Error(result.error||'Account request failed.');return result;})
+            .then(async(result)=>{
+              state.csrfToken=result.csrfToken;
+              const response=await fetch('/api/session',{credentials:'same-origin'});
+              const session=await response.json();
+              if (!response.ok||!session.authenticated) throw new Error('Account session could not be started.');
+              state.userId=session.user.id;
+              state.role=session.user.role;
+              state.authenticated=true;
+              await refreshFromServer();
+              closeModal();
+              renderHeader();
+              showPage(state.role==='admin'?'admin':state.role==='owner'?'offer':'explore');
+              toast(isLogin?'Signed in successfully.':'Your account has been created.');
+            })
+            .catch((error)=>toast(error.message||'Could not connect to NepaliSafari. Start the server and try again.'));
+        });
+      };
+      const toggleLocation = () => {
+        if (state.watchId !== null) { navigator.geolocation.clearWatch(state.watchId); state.watchId=null; state.location=null; $('#locationLabel').textContent='Share my location'; $('#locationButton').classList.remove('active'); renderRides(); toast('Location sharing stopped.'); return; }
+        if (!navigator.geolocation) { toast('Location is not available in this browser.'); return; }
+        $('#locationLabel').textContent='Requesting location…';
+        state.watchId=navigator.geolocation.watchPosition((position)=>{
+          state.location={lat:position.coords.latitude,lng:position.coords.longitude}; $('#locationLabel').textContent='Stop sharing location'; $('#locationButton').classList.add('active'); $('#mapStatusTitle').textContent='Your location'; $('#mapStatusText').textContent='Shared on this device only · GPS'; renderMap();
+        },(error)=>{state.watchId=null;$('#locationLabel').textContent='Share my location';$('#locationButton').classList.remove('active');toast(error.code===1?'Location permission was not granted.':'Could not get your location.');},{enableHighAccuracy:true,maximumAge:10000,timeout:12000});
+      };
+      const publishRide = (event) => {
+        event.preventDefault(); const user=currentUser();
+        if (!state.authenticated || state.role!=='owner') { openAuth('login'); return; }
+        if (!user.idVerified) { toast('An administrator must review your complete owner profile before you post rides.'); return; }
+        const from=$('#routeFrom').value.trim(), to=$('#routeTo').value.trim(), fare=Number($('#routeFare').value), distanceKm=Number($('#routeDistance').value);
+        if (!Number.isFinite(distanceKm)||distanceKm<=0||!Number.isFinite(fare)||fare<=0) { toast('Enter a valid route distance to calculate a fair fare.'); return; }
+        const ride={id:'R-'+Math.random().toString(36).slice(2,7).toUpperCase(),owner:user.id,from,to,date:$('#routeDate').value,time:$('#routeTime').value,seats:Number($('#routeSeats').value),fare,distanceKm,repeat:$('#routeRepeat').value,vehicle:$('#routeVehicle').value.trim(),status:'active',a:coordsFor(from),b:coordsFor(to)};
+        state.rides.push(ride); user.vehicle=ride.vehicle; save(); $('#routeForm').reset(); $('#routeTime').value='09:00'; suggestRouteDistance(); renderOwner(); renderRides(); toast('Your route is posted.');
+      };
+
+      $('#accountButton').addEventListener('click',()=>{
+        if (!state.authenticated) { openAuth('register'); return; }
+        modal(`<div class="modal-head"><div><div class="eyebrow">ACCOUNT</div><h2 id="modalTitle">${safe(currentUser().name)}</h2><p>${safe(currentUser().email||'')}</p></div><button class="close-button" aria-label="Close">×</button></div><button class="secondary" id="logoutButton" type="button">Sign out</button>`);
+        $('#logoutButton').addEventListener('click',async()=>{
+          try {
+            const response=await fetch('/api/logout',{method:'POST',credentials:'same-origin',headers:{'X-CSRF-Token':state.csrfToken}});
+            if (!response.ok) throw new Error('Could not sign out. Reload and try again.');
+            state.authenticated=false; state.userId=''; state.role='passenger'; state.csrfToken='';
+            await refreshFromServer();
+            closeModal(); renderHeader(); showPage('explore'); toast('You have signed out.');
+          } catch(error) { toast(error.message); }
+        });
+      });
+      $('#headAction').addEventListener('click',()=>state.authenticated&&state.role==='owner'?showPage('offer'):openAuth(state.authenticated?'owner':'register'));
+      $('#locationButton').addEventListener('click',toggleLocation);
+      $('#routeForm').addEventListener('submit',publishRide);
+      $('#routeFrom').addEventListener('input',suggestRouteDistance);
+      $('#routeTo').addEventListener('input',suggestRouteDistance);
+      $('#routeDistance').addEventListener('input',updateFareEstimate);
+      $('#routeSeats').addEventListener('change',updateFareEstimate);
+      $('#searchForm').addEventListener('submit',(event)=>{event.preventDefault();state.filterFrom=$('#searchFrom').value;state.filterTo=$('#searchTo').value;state.filterDate=$('#searchDate').value;state.selectedRide=null;$('#mapStatusTitle').textContent='Pacific Northwest';$('#mapStatusText').textContent='Select a ride to see its route';renderRides();});
+      $('#swapButton').addEventListener('click',()=>{const from=$('#searchFrom').value;$('#searchFrom').value=$('#searchTo').value;$('#searchTo').value=from;});
+      $('#tripsExplore').addEventListener('click',()=>showPage('explore'));
+      $('#zoomIn').addEventListener('click',()=>state.mapReady&&state.map.zoomIn()); $('#zoomOut').addEventListener('click',()=>state.mapReady&&state.map.zoomOut());
+      $('#exportButton').addEventListener('click',()=>{      const data={users:storedUserRecords(),rides:state.rides,bookings:state.bookings,complaints:state.complaints,ratings:state.ratings,messages:state.chatMessages,referrals:state.referrals};const file=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(file);link.download='nepalisafari-data-export.json';link.click();URL.revokeObjectURL(link.href);toast('Data export downloaded.');});
+      $('#languageButton').addEventListener('click',()=>{localStorage.setItem('wayfare-language-page',activePage());state.language=state.language==='ne'?'en':'ne';localStorage.setItem('wayfare-language',state.language);location.reload();});
+      $('#modalBackdrop').addEventListener('click',(event)=>{if(event.target===$('#modalBackdrop'))closeModal();});
+      document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeModal();});
+      $('#routeDate').min=iso(0); $('#searchDate').min=iso(0); $('#routeDate').value=iso(1);
+      const returnPage=localStorage.getItem('wayfare-language-page'); localStorage.removeItem('wayfare-language-page');
+      const startApp=async()=>{
+        try {
+          const response=await fetch('/api/session',{credentials:'same-origin'});
+          const session=await response.json();
+          if (!response.ok) throw new Error(session.error||'Could not connect to the NepaliSafari server.');
+          if (session.authenticated) {
+            state.authenticated=true; state.csrfToken=session.csrfToken; state.userId=session.user.id; state.role=session.user.role;
+          }
+          await refreshFromServer();
+          renderHeader(); renderNavigation(); renderRides(); renderOwner(); startMap(); applyLanguage();
+          if (returnPage && ['admin','offer','trips','invite','explore','about'].includes(returnPage)) showPage(returnPage);
+          else if (!state.authenticated) openAuth('register');
+        } catch(error) {
+          renderHeader(); renderNavigation(); renderRides(); startMap(); applyLanguage();
+          toast(error.message||'Start the NepaliSafari server to continue.');
+        }
+      };
+      startApp();
+    })();
+  </script>
+</body>
+</html>
